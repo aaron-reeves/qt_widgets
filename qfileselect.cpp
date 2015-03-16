@@ -6,7 +6,8 @@
 #include <QFileDialog>
 #include <QFileInfo>
 
-QFileSelect::QFileSelect(QWidget *parent) : QWidget(parent), ui(new Ui::QFileSelect) {
+
+CFileSelect::CQFileSelect( QWidget* parent, Qt::WindowFlags f ) : QWidget( parent, f ), ui(new Ui::CFileSelect) {
   ui->setupUi(this);
 
   _manualEdit = false;
@@ -28,6 +29,10 @@ QFileSelect::~QFileSelect() {
 }
 
 
+void CQFileSelect::clearPath() {
+  ui->leFilePath->clear();
+}
+
 void QFileSelect::setMode( const int fileMode ) {
   switch( fileMode ) {
     case ModeOpenFile:
@@ -40,30 +45,66 @@ void QFileSelect::setMode( const int fileMode ) {
       _mode = ModeUnspecified;
       break;
   }
+
+
+void QFileSelect::setCaption( const QString& val ) {
+  _caption = val;
 }
 
 
 void QFileSelect::setLabel( const QString& val ) {
   ui->lblFilePath->setText( val );
 }
+void CQFileSelect::selectFolder() {
+  QString s;
 
+  s = QFileDialog::getExistingDirectory(
+    this,
+    _caption,
+    _dir
+  );
 
-QString QFileSelect::label() {
-  return ui->lblFilePath->text();
+  if( !s.isEmpty() ) {
+    ui->leFilePath->setText( s );
+    _pathName =  s;
+    _dir = QFileInfo( _pathName ).absoluteDir().absolutePath();
+    _manualEdit = false;
+  }
 }
 
 
-void QFileSelect::selectFile() {
-  QString s;
+void CQFileSelect::selectFile() {
+  if( ExistingDir == mode() )
+    return selectFolder();
+  else {
+    QString s;
 
   switch( _mode ) {
     case ModeOpenFile:
-      s = QFileDialog::getOpenFileName(
-        this,
-        _caption,
-        _dir,
-        _filter
-      );
+    QFileDialog dialog(this);
+    dialog.setDirectory( _dir );
+    dialog.setNameFilter( _filter );
+
+    if( (ExistingDir == mode()) || (ExistingFile == mode()) )
+      dialog.setFileMode( QFileDialog::ExistingFile );
+    else
+      dialog.setFileMode( QFileDialog::AnyFile );
+
+    if( dialog.exec() )
+      s = dialog.selectedFiles().at(0);
+    else
+      s = "";
+
+    /*
+    s = QFileDialog::getOpenFileName(
+      this,
+      _caption,
+      _dir,
+      _filter,
+      NULL,
+      option
+    );
+    */
       break;
     case ModeSaveFile:
       s = QFileDialog::getSaveFileName(
@@ -85,6 +126,7 @@ void QFileSelect::selectFile() {
     _dir = QFileInfo( _pathName ).absoluteDir().absolutePath();
     _manualEdit = false;
   }
+}
 }
 
 

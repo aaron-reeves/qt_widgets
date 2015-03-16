@@ -1,3 +1,5 @@
+// Begin 2/8/08
+
 #ifndef QFILESELECT_H
 #define QFILESELECT_H
 
@@ -12,22 +14,30 @@ class QFileSelect : public QWidget {
   Q_OBJECT
 
   public:
+    enum Mode {
+      AnyFile,
+      ExistingFile,
+      ExistingDir
+    };
+      
     enum FileDialogModes {
       ModeUnspecified,
       ModeOpenFile,
       ModeSaveFile
     };
 
-    explicit QFileSelect(QWidget *parent = 0);
-    ~QFileSelect();
+    explicit CQFileSelect( QWidget* parent = 0, Qt::WindowFlags f = 0 );
+
+    ~CQFileSelect( void );
 
     // Filter format: "Plain text files (*.txt);; All Files (*.*)"
     void setFilter( const QString& val ) { _filter = val; }
     void setPathName( const QString& val );
     void setText( const QString& val );
+    void setCaption( const QString& val );
+    void setDir( /*const QString& val*/ );
+    void setMode( const int mode ) { _mode = mode; }
     void setCaption( const QString& val ) { _caption = val; }
-    void setDir( const QString& val );
-    void setMode( const int fileMode );
     void setLabel( const QString& val );
 
 
@@ -36,14 +46,17 @@ class QFileSelect : public QWidget {
     QString text( void );
     QString caption( void ) { return _caption; }
     QString dir( void );
-    int mode( void ) { return _mode; }
+    int mode() { return _mode; }
     QString label();
+
+    void clearPath();
 
     // FIX ME: Make this a real function!
     bool fileIsValid( void ) { return true; }
 
   protected slots:
     void selectFile();
+    void selectFolder();
     void updatePathName( const QString& unused );
 
   signals:
