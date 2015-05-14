@@ -10,7 +10,7 @@
 CFileSelect::CFileSelect( QWidget* parent, Qt::WindowFlags f ) : QWidget( parent, f ), ui(new Ui::CFileSelect) {
   ui->setupUi(this);
 
-  _manualEdit = false;
+  this->setFocusProxy( ui->leFilePath );
 
   // Filter format: "Plain text files (*.txt);; All Files (*.*)"
   _filter = "All Files (*.*)";
@@ -20,7 +20,10 @@ CFileSelect::CFileSelect( QWidget* parent, Qt::WindowFlags f ) : QWidget( parent
   _mode = ModeUnspecified;
 
   connect( ui->btnBrowse, SIGNAL( clicked() ), this, SLOT( selectFile() ) );
-  connect( ui->leFilePath, SIGNAL( textEdited( const QString& ) ), this, SLOT( updatePathName( const QString& ) ) );
+
+  connect( ui->leFilePath, SIGNAL( textEdited( QString ) ), this, SLOT( editText( QString ) ) );
+  connect( ui->leFilePath, SIGNAL( textChanged( QString ) ), this, SLOT( changeText( QString ) ) );
+  connect( ui->leFilePath, SIGNAL( editingFinished() ), this, SLOT( finishEditing() ) );
 }
 
 
@@ -33,18 +36,8 @@ void CFileSelect::clearPath() {
   ui->leFilePath->clear();
 }
 
-void CFileSelect::setMode( const int fileMode ) {
-  switch( fileMode ) {
-    case ModeOpenFile:
-      // fall through
-    case ModeSaveFile:
-      _mode = fileMode;
-      break;
-    default:
-      qDebug() << "There is a problem in CFileSelect::setMode()";
-      _mode = ModeUnspecified;
-      break;
-  }
+void CFileSelect::setMode( const int mode ) {
+  _mode = mode;
 }
 
 void CFileSelect::setCaption( const QString& val ) {
@@ -70,29 +63,34 @@ void CFileSelect::selectFolder() {
     ui->leFilePath->setText( s );
     _pathName =  s;
     _dir = QFileInfo( _pathName ).absoluteDir().absolutePath();
-    _manualEdit = false;
   }
 }
 
 
+void CFileSelect::finishEditing() {
+  ui->leFilePath->setText( _pathName );
+  emit editingFinished();
+}
+
+
 void CFileSelect::selectFile() {
-  if( ExistingDir == mode() )
+  if( _mode & ModeExistingDir )
     return selectFolder();
   else {
     QString s;
+    QFileDialog dialog(this);
 
-  QFileDialog dialog(this);
-
-  switch( _mode ) {
-    case ModeOpenFile:
+    if( _mode & ModeOpenFile ) {
       dialog.setDirectory( _dir );
       dialog.setNameFilter( _filter );
 
-      if( (ExistingDir == mode()) || (ExistingFile == mode()) )
+      if( _mode & ModeExistingFile )
         dialog.setFileMode( QFileDialog::ExistingFile );
       else
         dialog.setFileMode( QFileDialog::AnyFile );
 
+      // Something about this call causes the text "Folder createdFolder created" to be written to the console.
+      // It's a little weird.
       if( dialog.exec() )
         s = dialog.selectedFiles().at(0);
       else
@@ -108,35 +106,38 @@ void CFileSelect::selectFile() {
         option
       );
       */
-      break;
-    case ModeSaveFile:
+    }
+    else if( _mode & ModeSaveFile ) {
       s = QFileDialog::getSaveFileName(
         this,
         _caption,
         _dir,
         _filter
       );
-      break;
-    default:
+    }
+    else {
       qDebug() << "There is a problem in CFileSelect::selectFile()";
       s = "";
-      break;
-  }
+    }
 
-  if( !s.isEmpty() ) {
-    ui->leFilePath->setText( s );
-    _pathName =  s;
-    _dir = QFileInfo( _pathName ).absoluteDir().absolutePath();
-    _manualEdit = false;
+    if( !s.isEmpty() ) {
+      ui->leFilePath->setText( s );
+      _pathName =  s;
+      _dir = QFileInfo( _pathName ).absoluteDir().absolutePath();
+    }
   }
-}
 }
 
 
-void CFileSelect::updatePathName( const QString& unused ) {
-  qDebug() << unused;
+void CFileSelect::editText( const QString& val ) {
+  setPathNameInternal( val );
+  emit textEdited( val );
+}
 
-  _manualEdit = true;
+
+void CFileSelect::changeText( const QString& val ) {
+  setPathNameInternal( val );
+  emit textChanged( val );
 }
 
 
@@ -151,10 +152,20 @@ QString CFileSelect::text( void ) {
 
 
 void CFileSelect::setPathName( const QString& val ) {
-  _pathName = QFileInfo( val ).absoluteFilePath();
-  _dir = QFileInfo( _pathName ).absoluteDir().absolutePath();
-  _manualEdit = false;
-  ui->leFilePath->setText( _pathName );
+  setPathNameInternal( val );
+  ui->leFilePath->setText( val.trimmed() );
+}
+
+
+void CFileSelect::setPathNameInternal( const QString& val ) {
+  if( val.trimmed().isEmpty() ) {
+    _pathName = "";
+    _dir = "";
+  }
+  else {
+    _pathName = QFileInfo( val.trimmed() ).absoluteFilePath();
+    _dir = QFileInfo( _pathName ).absoluteDir().absolutePath();
+  }
 }
 
 
@@ -164,16 +175,12 @@ void CFileSelect::setDir( const QString& val ) {
 
 
 QString CFileSelect::dir( void ) {
-  if( true == _manualEdit ) {
-    setPathName( ui->leFilePath->text() );
-  }
   return _dir;
 }
 
 
 QString CFileSelect::pathName( void ) {
-  if( _manualEdit ) {
-    setPathName( ui->leFilePath->text() );
-  }
   return _pathName;
 }
+
+

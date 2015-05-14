@@ -14,16 +14,20 @@ class CFileSelect : public QWidget {
   Q_OBJECT
 
   public:
+    /*
     enum Mode {
       AnyFile,
       ExistingFile,
       ExistingDir
     };
-      
+    */
     enum FileDialogModes {
-      ModeUnspecified,
-      ModeOpenFile,
-      ModeSaveFile
+      ModeUnspecified = 0x0000,
+      ModeOpenFile = 0x0001,
+      ModeSaveFile = 0x0002,
+      ModeAnyFile = 0x0004,
+      ModeExistingFile = 0x0008,
+      ModeExistingDir = 0x0010
     };
 
     explicit CFileSelect( QWidget* parent = 0, Qt::WindowFlags f = 0 );
@@ -56,15 +60,19 @@ class CFileSelect : public QWidget {
   protected slots:
     void selectFile();
     void selectFolder();
-    void updatePathName( const QString& unused );
+    void editText( const QString& val );
+    void changeText( const QString& val );
+    void finishEditing();
+    void setPathNameInternal( const QString& val );
 
   signals:
-    void pathNameChanged( void );
-    void filterChanged( void );
+    void pathNameChanged(); // FIXME: Not emitted.  What was this for?
+    void filterChanged(); // FIXME: Not emitted.  What was this for?
+    void editingFinished();
+    void textEdited( const QString& str );
+    void textChanged( const QString& str );
 
   protected:
-    bool _manualEdit;
-
     QString _filter;
     QString _pathName;
     QString _caption;

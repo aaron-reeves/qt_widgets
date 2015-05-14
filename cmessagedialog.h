@@ -25,6 +25,10 @@ class CMessageDialog : public QDialog {
     QString caption();
     QString text();
 
+  protected slots:
+    void copyToClipboard();
+    void save();
+
   protected:
     void initializeUi( QMessageBox::Icon iconStyle );
 

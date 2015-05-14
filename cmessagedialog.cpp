@@ -3,6 +3,8 @@
 
 #include <QDebug>
 #include <QMessageBox>
+#include <QFileDialog>
+#include <QClipboard>
 
 CMessageDialog::CMessageDialog(QWidget *parent) : QDialog(parent), ui(new Ui::CMessageDialog) {
   initializeUi( QMessageBox::NoIcon );
@@ -26,6 +28,10 @@ CMessageDialog::~CMessageDialog() {
 void CMessageDialog::initializeUi( QMessageBox::Icon iconStyle ) {
   ui->setupUi(this);
   ui->label_2->setFrameShape( QFrame::NoFrame );
+
+  connect( ui->btnOK, SIGNAL( clicked() ), this, SLOT( close() ) );
+  connect( ui->btnCopy, SIGNAL( clicked() ), this, SLOT( copyToClipboard() ) );
+  connect( ui->btnSave, SIGNAL( clicked() ), this, SLOT( save() ) );
 
   QMessageBox* mb = new QMessageBox();
 
@@ -67,22 +73,55 @@ void CMessageDialog::setCaption( const QString& caption ) {
   ui->label->setText( caption );
 }
 
+
 void CMessageDialog::clear() {
   ui->plainTextEdit->clear();
 }
+
 
 void CMessageDialog::append( const QString& str ) {
   ui->plainTextEdit->appendPlainText( str );
 }
 
+
 void CMessageDialog::setText( const QString& text ) {
   ui->plainTextEdit->setPlainText( text );
 }
+
 
 QString CMessageDialog::caption() {
   return ui->label->text();
 }
 
+
 QString CMessageDialog::text() {
   return ui->plainTextEdit->toPlainText();
+}
+
+
+void CMessageDialog::copyToClipboard() {
+  QApplication::clipboard()->setText( ui->plainTextEdit->toPlainText() );
+  QMessageBox::information( this, "Message copied", "Contents of this message have been copied to the clipboard." );
+}
+
+
+void CMessageDialog::save() {
+  QString s = QFileDialog::getSaveFileName(
+    this,
+    "Save message as file",
+    QDir::currentPath(),
+    "Plain-text files (*.txt);; All files (*.*)"
+  );
+
+  if( !s.isEmpty() ) {
+    QFile file( s );
+    if( !file.open( QFile::WriteOnly | QFile::Truncate ) )
+      QMessageBox::warning( this, "Cannot write file", QString( "Cannot open error log for writing: %1" ).arg( s ) );
+    else {
+      QTextStream out( &file );
+      out << ui->plainTextEdit->toPlainText();
+      out << flush;
+      file.close();
+    }
+  }
 }
