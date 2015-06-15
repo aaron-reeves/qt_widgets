@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/slider">
+        <file>handle.png</file>
+        <file>handle3.png</file>
+        <file>handle5.png</file>
+    </qresource>
+</RCC>
