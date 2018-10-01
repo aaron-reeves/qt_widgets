@@ -62,7 +62,9 @@ void CFileSelect::selectFolder() {
   if( !s.isEmpty() ) {
     ui->leFilePath->setText( s );
     _pathName =  s;
-    _dir = QFileInfo( _pathName ).absoluteDir().absolutePath();
+    _dir = QFileInfo( _pathName ).absoluteFilePath();
+    qDebug() << "_dir from selectFolder():" << _dir;
+    emit pathNameChanged();
   }
 }
 
@@ -124,6 +126,8 @@ void CFileSelect::selectFile() {
       ui->leFilePath->setText( s );
       _pathName =  s;
       _dir = QFileInfo( _pathName ).absoluteDir().absolutePath();
+      qDebug() << "_dir from selectFile():" << _dir;
+      emit pathNameChanged();
     }
   }
 }
@@ -152,7 +156,7 @@ QString CFileSelect::text( void ) {
 
 
 void CFileSelect::setPathName( const QString& val ) {
-  setPathNameInternal( val );
+  setPathNameInternal( val.trimmed() );
   ui->leFilePath->setText( val.trimmed() );
 }
 
@@ -164,13 +168,29 @@ void CFileSelect::setPathNameInternal( const QString& val ) {
   }
   else {
     _pathName = QFileInfo( val.trimmed() ).absoluteFilePath();
-    _dir = QFileInfo( _pathName ).absoluteDir().absolutePath();
+    _dir = QFileInfo( _pathName ).absolutePath();
+    qDebug() << "_dir from setPathNameInternal():" << _dir;
+    emit pathNameChanged();
   }
 }
 
 
-void CFileSelect::setDir( const QString& val ) {
-  _dir = QFileInfo( val ).absoluteDir().absolutePath();
+void CFileSelect::setDir( QString val ) {
+  val = val.trimmed();
+  if( !val.isEmpty() ) {
+    QFileInfo fi( val );
+    if( fi.isDir() )
+      _dir = fi.absoluteFilePath();
+    else
+      fi.absolutePath();
+
+    qDebug() << "absolute file path:" << fi.absoluteFilePath();
+    qDebug() << "absolute path:" << fi.absolutePath();
+    qDebug() << "_dir from setDir():" << _dir;
+    qDebug() << "val was:" << val;
+  }
+  else
+    _dir = "";
 }
 
 

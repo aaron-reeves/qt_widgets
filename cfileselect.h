@@ -39,7 +39,7 @@ class CFileSelect : public QWidget {
     void setPathName( const QString& val );
     void setText( const QString& val );
     void setCaption( const QString& val );
-    void setDir( const QString& val );
+    void setDir( QString val );
     void setMode( const int mode );
     void setLabel( const QString& val );
 
@@ -66,7 +66,7 @@ class CFileSelect : public QWidget {
     void setPathNameInternal( const QString& val );
 
   signals:
-    void pathNameChanged(); // FIXME: Not emitted.  What was this for?
+    void pathNameChanged();
     void filterChanged(); // FIXME: Not emitted.  What was this for?
     void editingFinished();
     void textEdited( const QString& str );
