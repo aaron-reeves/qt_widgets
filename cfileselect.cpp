@@ -1,3 +1,16 @@
+/*
+cfileselect.h/cpp
+-----------------
+Begin: 2008/02/18
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
+--------------------------------------------------
+Copyright (C) 2008 Aaron Reeves
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+*/
+
 #include "CFileSelect.h"
 #include "ui_CFileSelect.h"
 
@@ -72,7 +85,7 @@ void CFileSelect::selectFolder() {
       _dir = fi.absolutePath();
     }
 
-    qDebug() << "_dir from selectFolder():" << _dir;
+    //qDebug() << "_dir from selectFolder():" << _dir;
     emit pathNameChanged();
   }
 }
@@ -95,10 +108,12 @@ void CFileSelect::selectFile() {
       dialog.setDirectory( _dir );
       dialog.setNameFilter( _filter );
 
-      if( _mode & ModeExistingFile )
+      if( _mode & ModeExistingFile ) {
         dialog.setFileMode( QFileDialog::ExistingFile );
-      else
+      }
+      else {
         dialog.setFileMode( QFileDialog::AnyFile );
+      }
 
       // Something about this call causes the text "Folder createdFolder created" to be written to the console.
       // It's a little weird.
@@ -127,7 +142,8 @@ void CFileSelect::selectFile() {
       );
     }
     else {
-      qDebug() << "There is a problem in CFileSelect::selectFile()";
+      qDebug() << "There is a problem in CFileSelect::selectFile()" << _mode;
+      Q_ASSERT( false );
       s = "";
     }
 

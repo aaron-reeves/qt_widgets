@@ -1,4 +1,16 @@
-// Begin 2/8/08
+/*
+cfileselect.h/cpp
+-----------------
+Begin: 2008/02/18
+Author: Aaron Reeves <aaron.reeves@naadsm.org>
+--------------------------------------------------
+Copyright (C) 2008 Aaron Reeves
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+*/
+
 
 #ifndef CFileSelect_H
 #define CFileSelect_H
