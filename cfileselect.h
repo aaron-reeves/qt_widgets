@@ -42,7 +42,7 @@ class CFileSelect : public QWidget {
       ModeExistingDir = 0x0010
     };
 
-    explicit CFileSelect( QWidget* parent = 0, Qt::WindowFlags f = 0 );
+    explicit CFileSelect( QWidget* parent = nullptr, Qt::WindowFlags f = nullptr );
 
     ~CFileSelect( void );
 

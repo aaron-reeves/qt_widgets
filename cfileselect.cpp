@@ -11,8 +11,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 (at your option) any later version.
 */
 
-#include "CFileSelect.h"
-#include "ui_CFileSelect.h"
+#include "cfileselect.h"
+#include "ui_cfileselect.h"
 
 #include <QDebug>
 #include <QDir>
