@@ -66,6 +66,11 @@ class CFileSelect : public QWidget {
 
     void clearPath();
 
+    bool isEmpty() const;
+
+    bool dirExists() const;
+    bool fileExists() const;
+
     // FIX ME: Make this a real function!
     bool fileIsValid( void ) { return true; }
 

@@ -49,6 +49,10 @@ void CFileSelect::clearPath() {
   ui->leFilePath->clear();
 }
 
+bool CFileSelect::isEmpty() const {
+  return ui->leFilePath->text().isEmpty();
+}
+
 void CFileSelect::setMode( const int mode ) {
   _mode = mode;
 }
@@ -88,6 +92,19 @@ void CFileSelect::selectFolder() {
     //qDebug() << "_dir from selectFolder():" << _dir;
     emit pathNameChanged();
   }
+}
+
+bool CFileSelect::dirExists() const {
+  if( ModeExistingDir == this->_mode )
+    return fileExists();
+  else {
+    return QFileInfo( _pathName ).dir().exists();
+  }
+}
+
+
+bool CFileSelect::fileExists() const {
+  return QFileInfo( _pathName ).exists();
 }
 
 
@@ -212,7 +229,6 @@ void CFileSelect::setPathNameInternal( const QString& val ) {
       _dir = fi.absolutePath();
     }
 
-    qDebug() << "_dir from setPathNameInternal():" << _dir;
     emit pathNameChanged();
   }
 }
