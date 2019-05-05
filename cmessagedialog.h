@@ -16,6 +16,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 
 #include <QDialog>
 #include <QMessageBox>
+#include <QtWidgets>
 
 namespace Ui {
 class CMessageDialog;
@@ -25,15 +26,17 @@ class CMessageDialog : public QDialog {
   Q_OBJECT
 
   public:
-    explicit CMessageDialog(QWidget *parent = 0);
-    explicit CMessageDialog( const QString& title, const QString& text, QMessageBox::Icon iconStyle = QMessageBox::NoIcon, QWidget *parent = 0 );
+    explicit CMessageDialog( QWidget *parent = nullptr );
+    explicit CMessageDialog( const QString& title, const QString& caption, QMessageBox::Icon iconStyle = QMessageBox::NoIcon, QWidget *parent = nullptr );
     ~CMessageDialog();
 
     void setCaption( const QString& text );
+    void setLineWrapMode( QPlainTextEdit::LineWrapMode mode );
 
     void clear();
     void append( const QString& str );
     void setText( const QString& body );
+    void setText( const QStringList& list );
 
     QString caption();
     QString text();

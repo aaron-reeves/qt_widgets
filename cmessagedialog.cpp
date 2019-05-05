@@ -24,11 +24,11 @@ CMessageDialog::CMessageDialog(QWidget *parent) : QDialog(parent), ui(new Ui::CM
 }
 
 
-CMessageDialog::CMessageDialog( const QString& title, const QString& text, QMessageBox::Icon iconStyle, QWidget *parent ) : QDialog(parent), ui(new Ui::CMessageDialog) {
+CMessageDialog::CMessageDialog( const QString& title, const QString& caption, QMessageBox::Icon iconStyle, QWidget *parent ) : QDialog(parent), ui(new Ui::CMessageDialog) {
   initializeUi( iconStyle );
 
   setWindowTitle( title );
-  setCaption( text );
+  setCaption( caption );
   clear();
 }
 
@@ -73,7 +73,7 @@ void CMessageDialog::initializeUi( QMessageBox::Icon iconStyle ) {
   if( tmpIcon.isNull() )
     ui->label_2->setGeometry( ui->label_2->x(), ui->label_2->y(), 0, 0 );
   else {
-    int iconSize = style->pixelMetric( QStyle::PM_MessageBoxIconSize, 0, mb );
+    int iconSize = style->pixelMetric( QStyle::PM_MessageBoxIconSize, nullptr, mb );
     ui->label_2->setGeometry( ui->label_2->x(), ui->label_2->y(), iconSize, iconSize );
     ui->label_2->setPixmap( tmpIcon.pixmap( iconSize, iconSize ) );
   }
@@ -84,6 +84,11 @@ void CMessageDialog::initializeUi( QMessageBox::Icon iconStyle ) {
 
 void CMessageDialog::setCaption( const QString& caption ) {
   ui->label->setText( caption );
+}
+
+
+void CMessageDialog::setLineWrapMode( QPlainTextEdit::LineWrapMode mode ) {
+  ui->plainTextEdit->setLineWrapMode( mode );
 }
 
 
@@ -99,6 +104,14 @@ void CMessageDialog::append( const QString& str ) {
 
 void CMessageDialog::setText( const QString& text ) {
   ui->plainTextEdit->setPlainText( text );
+}
+
+
+void CMessageDialog::setText( const QStringList& list ) {
+  ui->plainTextEdit->clear();
+  for( int i = 0; i < list.count(); ++i ) {
+    ui->plainTextEdit->appendPlainText( list.at(i) );
+  }
 }
 
 
