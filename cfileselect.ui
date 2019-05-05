@@ -42,7 +42,7 @@
     <number>2</number>
    </property>
    <item>
-    <widget class="QLabel" name="lblFilePath">
+    <widget class="QLabel" name="label">
      <property name="text">
       <string>File:</string>
      </property>
@@ -66,7 +66,14 @@
       <number>0</number>
      </property>
      <item>
-      <widget class="QLineEdit" name="leFilePath">
+      <widget class="QPushButton" name="btnTest">
+       <property name="text">
+        <string>Test</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="CMyLineEdit" name="leFilePath">
        <property name="sizePolicy">
         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -129,6 +136,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CMyLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qt_widgets/cfileselect.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -15,86 +15,106 @@ Public License as published by the Free Software Foundation; either version 2 of
 #ifndef CFileSelect_H
 #define CFileSelect_H
 
-#include <QWidget>
-#include <QString>
+#include <QtWidgets>
+#include <QtCore>
 
 namespace Ui {
   class CFileSelect;
 }
 
+class CMyLineEdit : public QLineEdit {
+  friend class CFileSelect;
+  Q_OBJECT
+  public:
+    CMyLineEdit( QWidget* parent = nullptr );
+
+  protected slots:
+    void setActualPathName( QString val );
+
+  protected:
+    void focusInEvent( QFocusEvent* event );
+
+    QString _actualPathName;
+};
+
+
 class CFileSelect : public QWidget {
   Q_OBJECT
 
   public:
-    /*
-    enum Mode {
-      AnyFile,
-      ExistingFile,
-      ExistingDir
-    };
-    */
     enum FileDialogModes {
-      ModeUnspecified = 0x0000,
-      ModeOpenFile = 0x0001,
-      ModeSaveFile = 0x0002,
-      ModeAnyFile = 0x0004,
+      ModeUnspecified  = 0x0000,
+      ModeOpenFile     = 0x0001,
+      ModeSaveFile     = 0x0002,
+      ModeAnyFile      = 0x0004,
       ModeExistingFile = 0x0008,
-      ModeExistingDir = 0x0010
+      ModeExistingDir  = 0x0010
     };
 
     explicit CFileSelect( QWidget* parent = nullptr, Qt::WindowFlags f = nullptr );
-
     ~CFileSelect( void );
 
+    // Properties
+    //-----------
+    // Mode MUST be specified.  Everything else has a reasonable default.
+    void setMode( const int mode ) { _mode = mode; }
+    int mode() const { return _mode; }
+
     // Filter format: "Plain text files (*.txt);; All Files (*.*)"
+    // Defaults to all files.
     void setFilter( const QString& val ) { _filter = val; }
-    void setPathName( const QString& val );
-    void setText( const QString& val );
-    void setCaption( const QString& val );
-    void setDir( QString val );
-    void setMode( const int mode );
+    QString specifiedFilter() const { return _filter; }
+
+    // Label displayed by the widget itself
     void setLabel( const QString& val );
+    QString label() const;
+
+    // Message displayed by file dialog boxes
+    void setCaption( const QString& val ) { _caption = val; }
+    QString caption() const { return _caption; }
 
 
-    QString filter( void ) { return _filter; }
-    QString pathName( void );
-    QString text( void );
-    QString caption( void ) { return _caption; }
-    QString dir( void );
-    int mode() { return _mode; }
-    QString label();
+    // The functions that do the work
+    //-------------------------------
+    QString pathName( void ) const;
+    QString directory( void ) const;
+    QString filename( void ) const { return pathName(); } // a simple synonym for pathName
 
-    void clearPath();
+    void setPathName( const QString& val );
+    void setDirectory( const QString& val ) { setPathName( val ); } // Internally the same as pathName. The class works out whether the user wants the directory or the file at the appropriate time.
+    void setFilename( const QString& val ) { setPathName( val ); } // a simple synonym for pathName
 
-    bool isEmpty() const;
+    void clearPath(); // Blows away any specified path
+    bool isEmpty() const { return _actualPathName.isEmpty(); } // Indicates whether a path (either file or directory) has been set.
 
     bool dirExists() const;
     bool fileExists() const;
 
-    // FIX ME: Make this a real function!
+    // FIXME: Make this a real function!
     bool fileIsValid( void ) { return true; }
 
+  public slots:
+    void debug();
+
   protected slots:
-    void selectFile();
-    void selectFolder();
-    void editText( const QString& val );
-    void changeText( const QString& val );
-    void finishEditing();
-    void setPathNameInternal( const QString& val );
+    void selectFileOrFolder(); // Called when the button is clicked
+    void updateLineEdit( QString newPathName );
+    void slotEditingFinished();
 
   signals:
-    void pathNameChanged();
-    void filterChanged(); // FIXME: Not emitted.  What was this for?
-    void editingFinished();
-    void textEdited( const QString& str );
-    void textChanged( const QString& str );
+    void pathNameChanged( QString newPathName );  // Used internally.  Of possible interest externally as well.
 
   protected:
+    void selectFolder();
+    void selectFile();
+    QString startDirectory(); // Helper used by selectFolder and selectFile
+
     QString _filter;
-    QString _pathName;
     QString _caption;
-    QString _dir;
     int _mode;
+
+    QString _actualPathName;
+    QString _lastUsedPath;
 
   private:
     Ui::CFileSelect *ui;

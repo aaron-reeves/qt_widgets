@@ -19,6 +19,26 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <QFileDialog>
 #include <QFileInfo>
 
+#include <ar_general_purpose/arcommon.h>
+
+CMyLineEdit::CMyLineEdit( QWidget* parent ) : QLineEdit( parent ) {
+  // Nothing to do here
+}
+
+
+void CMyLineEdit::focusInEvent( QFocusEvent* event ) {
+  this->setText( _actualPathName );
+
+  QLineEdit::focusInEvent( event );
+
+  this->end( false );
+}
+
+
+void CMyLineEdit::setActualPathName( QString val ) {
+  _actualPathName = val;
+}
+
 
 CFileSelect::CFileSelect( QWidget* parent, Qt::WindowFlags f ) : QWidget( parent, f ), ui(new Ui::CFileSelect) {
   ui->setupUi(this);
@@ -28,15 +48,16 @@ CFileSelect::CFileSelect( QWidget* parent, Qt::WindowFlags f ) : QWidget( parent
   // Filter format: "Plain text files (*.txt);; All Files (*.*)"
   _filter = "All Files (*.*)";
   _caption = "Please select a file";
-  _pathName = QString();
-  _dir = QString();
+  _actualPathName = QString();
   _mode = ModeUnspecified;
 
-  connect( ui->btnBrowse, SIGNAL( clicked() ), this, SLOT( selectFile() ) );
+  connect( ui->btnBrowse, SIGNAL( clicked() ), this, SLOT( selectFileOrFolder() ) );
+  connect( this, SIGNAL( pathNameChanged( QString ) ), this, SLOT( updateLineEdit( QString ) ) );
+  connect( this, SIGNAL( pathNameChanged( QString ) ), ui->leFilePath, SLOT( setActualPathName( QString ) ) );
+  connect( ui->leFilePath, SIGNAL( editingFinished() ), this, SLOT( slotEditingFinished() ) );
 
-  connect( ui->leFilePath, SIGNAL( textEdited( QString ) ), this, SLOT( editText( QString ) ) );
-  connect( ui->leFilePath, SIGNAL( textChanged( QString ) ), this, SLOT( changeText( QString ) ) );
-  connect( ui->leFilePath, SIGNAL( editingFinished() ), this, SLOT( finishEditing() ) );
+  ui->btnTest->setVisible( false );
+  connect( ui->btnTest, SIGNAL( clicked() ), this, SLOT( debug() ) );
 }
 
 
@@ -44,220 +65,159 @@ CFileSelect::~CFileSelect() {
   delete ui;
 }
 
-
-void CFileSelect::clearPath() {
-  ui->leFilePath->clear();
-}
-
-bool CFileSelect::isEmpty() const {
-  return ui->leFilePath->text().isEmpty();
-}
-
-void CFileSelect::setMode( const int mode ) {
-  _mode = mode;
-}
-
-void CFileSelect::setCaption( const QString& val ) {
-  _caption = val;
-}
-
-
-void CFileSelect::setLabel( const QString& val ) {
-  ui->lblFilePath->setText( val );
-}
-
-
-void CFileSelect::selectFolder() {
-  QString s;
-
-  s = QFileDialog::getExistingDirectory(
-    this,
-    _caption,
-    _dir
-  );
-
-  if( !s.isEmpty() ) {
-    ui->leFilePath->setText( s );
-    _pathName =  s;
-
-    QFileInfo fi( _pathName );
-
-    if( fi.isDir() ) {
-      _dir = fi.absoluteFilePath();
-    }
-    else {
-      _dir = fi.absolutePath();
-    }
-
-    //qDebug() << "_dir from selectFolder():" << _dir;
-    emit pathNameChanged();
-  }
-}
-
+// Simple properties and helper functions
+//---------------------------------------
 bool CFileSelect::dirExists() const {
   if( ModeExistingDir == this->_mode )
     return fileExists();
   else {
-    return QFileInfo( _pathName ).dir().exists();
+    return QFileInfo( _actualPathName ).dir().exists();
   }
 }
 
-
 bool CFileSelect::fileExists() const {
-  return QFileInfo( _pathName ).exists();
+  return QFileInfo( _actualPathName ).exists();
+}
+
+void CFileSelect::clearPath() {
+  if( !_actualPathName.isEmpty() )
+    _lastUsedPath = _actualPathName;
+
+  _actualPathName = QString();
+  emit pathNameChanged( _actualPathName );
+}
+
+QString CFileSelect::startDirectory() {
+  QFileInfo fi;
+
+  if( !_actualPathName.isEmpty() )
+    fi = QFileInfo( _actualPathName );
+  else if( !_lastUsedPath.isEmpty() )
+    fi = QFileInfo( _lastUsedPath );
+
+  if( fi.isDir() )
+    return fi.absoluteFilePath();
+  else
+    return fi.absolutePath();
+}
+
+void CFileSelect::setLabel( const QString& val ){
+  ui->label->setText( val );
+}
+
+QString CFileSelect::label() const {
+  return ui->label->text();
 }
 
 
-void CFileSelect::finishEditing() {
-  ui->leFilePath->setText( _pathName );
-  emit editingFinished();
+void CFileSelect::debug() {
+  qDb() << "Mode:" << this->mode();
+  qDb() << "Filter:" << this->specifiedFilter();
+  qDb() << "File name:" << this->pathName();
+  qDb() << "Directory name:" << this->directory();
+  qDb() << "Last used path:" << _lastUsedPath;
+}
+
+
+// Getter and setter-type functions
+//---------------------------------
+QString CFileSelect::directory( void ) const {
+  Q_ASSERT( ModeUnspecified != _mode );
+
+  if( ModeExistingDir & _mode )
+    return QFileInfo( _actualPathName ).absoluteFilePath();
+  else if( ModeUnspecified != _mode )
+    return QFileInfo( _actualPathName ).absolutePath();
+  else
+    return QString();
+}
+
+
+QString CFileSelect::pathName( void ) const {
+  Q_ASSERT( ModeUnspecified != _mode );
+
+  if( ModeUnspecified != _mode )
+    return QFileInfo( _actualPathName ).absoluteFilePath();
+  else
+    return QString();
+}
+
+
+void CFileSelect::selectFolder() {
+  QString selectedDirectory;
+  QString startingDirectory = startDirectory();
+
+  selectedDirectory = QFileDialog::getExistingDirectory( this, _caption, startingDirectory );
+
+  if( !selectedDirectory.isEmpty() ) {
+    _actualPathName = selectedDirectory;
+    emit pathNameChanged( _actualPathName );
+  }
 }
 
 
 void CFileSelect::selectFile() {
-  if( _mode & ModeExistingDir )
-    return selectFolder();
+  QString startingDirectory = startDirectory();
+  QString selectedFile;
+  QFileDialog dialog(this);
+
+  if( _mode & ModeOpenFile ) {
+    dialog.setDirectory( startingDirectory );
+    dialog.setNameFilter( _filter );
+
+    if( _mode & ModeExistingFile )
+      dialog.setFileMode( QFileDialog::ExistingFile );
+    else
+      dialog.setFileMode( QFileDialog::AnyFile );
+
+    if( dialog.exec() )
+      selectedFile = dialog.selectedFiles().at(0);
+    else
+      selectedFile = "";
+  }
+  else if( _mode & ModeSaveFile ) {
+    selectedFile = QFileDialog::getSaveFileName( this, _caption, startingDirectory, _filter );
+  }
   else {
-    QString s;
-    QFileDialog dialog(this);
+    qDb() << "There is a problem in CFileSelect::selectFile()" << _mode;
+    Q_ASSERT( false );
+    selectedFile = "";
+  }
 
-    if( _mode & ModeOpenFile ) {
-      dialog.setDirectory( _dir );
-      dialog.setNameFilter( _filter );
-
-      if( _mode & ModeExistingFile ) {
-        dialog.setFileMode( QFileDialog::ExistingFile );
-      }
-      else {
-        dialog.setFileMode( QFileDialog::AnyFile );
-      }
-
-      // Something about this call causes the text "Folder createdFolder created" to be written to the console.
-      // It's a little weird.
-      if( dialog.exec() )
-        s = dialog.selectedFiles().at(0);
-      else
-        s = "";
-
-      /*
-      s = QFileDialog::getOpenFileName(
-        this,
-        _caption,
-        _dir,
-        _filter,
-        NULL,
-        option
-      );
-      */
-    }
-    else if( _mode & ModeSaveFile ) {
-      s = QFileDialog::getSaveFileName(
-        this,
-        _caption,
-        _dir,
-        _filter
-      );
-    }
-    else {
-      qDebug() << "There is a problem in CFileSelect::selectFile()" << _mode;
-      Q_ASSERT( false );
-      s = "";
-    }
-
-    if( !s.isEmpty() ) {
-      ui->leFilePath->setText( s );
-      _pathName =  s;
-
-      QFileInfo fi( _pathName );
-
-      if( fi.isDir() ) {
-        _dir = fi.absoluteFilePath();
-      }
-      else {
-        _dir = fi.absolutePath();
-      }
-
-      qDebug() << "_dir from selectFile():" << _dir;
-      emit pathNameChanged();
-    }
+  if( !selectedFile.isEmpty() ) {
+    _actualPathName = selectedFile;
+    emit pathNameChanged( _actualPathName );
   }
 }
 
 
-void CFileSelect::editText( const QString& val ) {
-  setPathNameInternal( val );
-  emit textEdited( val );
-}
-
-
-void CFileSelect::changeText( const QString& val ) {
-  setPathNameInternal( val );
-  emit textChanged( val );
-}
-
-
-void CFileSelect::setText( const QString& val ) {
-  ui->lblFilePath->setText( val );
-}
-
-
-QString CFileSelect::text( void ) {
-  return( ui->lblFilePath->text() );
+void CFileSelect::selectFileOrFolder() {
+  if( _mode & ModeExistingDir )
+    selectFolder();
+  else
+    selectFile();
 }
 
 
 void CFileSelect::setPathName( const QString& val ) {
-  setPathNameInternal( val.trimmed() );
-  ui->leFilePath->setText( val.trimmed() );
+  _actualPathName = val.trimmed();
+  emit pathNameChanged( _actualPathName );
 }
 
 
-void CFileSelect::setPathNameInternal( const QString& val ) {
-  if( val.trimmed().isEmpty() ) {
-    _pathName = QString();
-    _dir = QString();
-  }
-  else {
-    QFileInfo fi( val );
-
-    _pathName = fi.absoluteFilePath();
-
-    if( fi.isDir() ) {
-      _dir = fi.absoluteFilePath();
-    }
-    else {
-      _dir = fi.absolutePath();
-    }
-
-    emit pathNameChanged();
-  }
+// Events, etc.
+//-------------
+void CFileSelect::updateLineEdit( QString newPathName ) {
+  ui->leFilePath->setText( abbreviatePath( newPathName, 90 ) );
 }
 
 
-void CFileSelect::setDir( QString val ) {
-  val = val.trimmed();
-  if( !val.isEmpty() ) {
-    QFileInfo fi( val );
-
-    if( fi.isDir() ) {
-      _dir = fi.absoluteFilePath();
-    }
-    else {
-      _dir = fi.absolutePath();
-    }
-  }
-  else
-    _dir = QString();
+void CFileSelect::slotEditingFinished() {
+  _actualPathName = ui->leFilePath->text().trimmed();
+  emit pathNameChanged( _actualPathName );
 }
 
 
-QString CFileSelect::dir( void ) {
-  return _dir;
-}
 
-
-QString CFileSelect::pathName( void ) {
-  return _pathName;
-}
 
 
