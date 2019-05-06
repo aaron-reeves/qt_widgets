@@ -14,6 +14,7 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include "cmessagedialog.h"
 #include "ui_cmessagedialog.h"
 
+#include <QtCore>
 #include <QDebug>
 #include <QMessageBox>
 #include <QFileDialog>
@@ -30,6 +31,8 @@ CMessageDialog::CMessageDialog( const QString& title, const QString& caption, QM
   setWindowTitle( title );
   setCaption( caption );
   clear();
+
+  _error = false;
 }
 
 
@@ -104,6 +107,7 @@ void CMessageDialog::append( const QString& str ) {
 
 void CMessageDialog::setText( const QString& text ) {
   ui->plainTextEdit->setPlainText( text );
+  ui->plainTextEdit->moveCursor( QTextCursor::Start );
 }
 
 
@@ -112,6 +116,29 @@ void CMessageDialog::setText( const QStringList& list ) {
   for( int i = 0; i < list.count(); ++i ) {
     ui->plainTextEdit->appendPlainText( list.at(i) );
   }
+
+  ui->plainTextEdit->moveCursor( QTextCursor::Start );
+}
+
+
+void CMessageDialog::setTextFromFile( const QString& filename ) {
+  this->clear();
+
+  QFile file( filename );
+  if( !file.open(QIODevice::ReadOnly | QIODevice::Text ) ) {
+    _error = true;
+    _errMsg = "Could not read from file 'filename'";
+    return;
+  }
+
+  QString line;
+  QTextStream in( &file );
+  while( !in.atEnd() ) {
+    line = in.readLine();
+    this->append( line.trimmed() );
+  }
+
+  ui->plainTextEdit->moveCursor( QTextCursor::Start );
 }
 
 
@@ -151,3 +178,30 @@ void CMessageDialog::save() {
     }
   }
 }
+
+
+void CMessageDialog::setDimensions( const int newWidth, const int newHeight ) {
+  if( nullptr != this->parentWidget() ) {
+    QWidget* parent = this->parentWidget();
+
+    QPoint parentPosGlobal = parent->mapToGlobal(parent->pos());
+    QPoint newPos = parent->mapFromGlobal( QPoint( parentPosGlobal.x() + parent->width()/2 - newWidth/2, parentPosGlobal.y() + parent->height()/2 - newHeight/2 ) );
+    qDebug() << parent->pos();
+    qDebug() << parentPosGlobal;
+    qDebug() << newPos;
+
+    this->setGeometry(
+      newPos.x(),
+      newPos.y(),
+      newWidth,
+      newHeight
+   );
+
+  }
+  else {
+    this->resize( newWidth, newHeight );
+  }
+}
+
+
+

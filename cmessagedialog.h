@@ -37,9 +37,14 @@ class CMessageDialog : public QDialog {
     void append( const QString& str );
     void setText( const QString& body );
     void setText( const QStringList& list );
+    void setTextFromFile( const QString& filename );
+    void setDimensions( const int newWidth, const int newHeight );
 
     QString caption();
     QString text();
+
+    bool error() const { return _error; }
+    QString errorMessage() const { return _errMsg; }
 
   protected slots:
     void copyToClipboard();
@@ -50,6 +55,9 @@ class CMessageDialog : public QDialog {
 
   private:
     Ui::CMessageDialog *ui;
+
+    bool _error;
+    QString _errMsg;
 };
 
 #endif // CMESSAGEDIALOG_H
