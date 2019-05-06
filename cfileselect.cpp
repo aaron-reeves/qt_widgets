@@ -22,18 +22,38 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include <ar_general_purpose/arcommon.h>
 
 CMyLineEdit::CMyLineEdit( QWidget* parent ) : QLineEdit( parent ) {
-  // Nothing to do here
+  _firstClick = true;
 }
 
 
-void CMyLineEdit::focusInEvent( QFocusEvent* event ) {
-  this->setText( _actualPathName );
-
-  QLineEdit::focusInEvent( event );
-
-  this->end( false );
-}
-
+/* This seems to be the only event that matters for my purposes, but there are others that
+ *  might need to be explored if things don't work as expected:
+ *
+ * enterEvent(QEvent *) (I tried this one, and it seemed to be the wrong one)
+ * leaveEvent(QEvent *)
+ *
+ * changeEvent(QEvent *)
+ *
+ * keyPressEvent(QKeyEvent *)
+ * keyReleaseEvent(QKeyEvent *)
+ *
+ * focusInEvent(QFocusEvent *) (In use: see below)
+ * focusOutEvent(QFocusEvent *) (In use: see below)
+ *
+ * contextMenuEvent(QContextMenuEvent *)
+ * inputMethodEvent(QInputMethodEvent *)
+ *
+ * mouseDoubleClickEvent(QMouseEvent *)
+ * mouseMoveEvent(QMouseEvent *)
+ * mousePressEvent(QMouseEvent *)
+ * mouseReleaseEvent(QMouseEvent *) (In use: see below)
+ * wheelEvent(QWheelEvent *)
+ *
+ * dragEnterEvent(QDragEnterEvent *) (These could be useful some day, if I want drag/drop capability)
+ * dragLeaveEvent(QDragLeaveEvent *)
+ * dragMoveEvent(QDragMoveEvent *)
+ * dropEvent(QDropEvent *)
+ */
 
 void CMyLineEdit::setActualPathName( QString val ) {
   _actualPathName = val;
@@ -48,13 +68,12 @@ CFileSelect::CFileSelect( QWidget* parent, Qt::WindowFlags f ) : QWidget( parent
   // Filter format: "Plain text files (*.txt);; All Files (*.*)"
   _filter = "All Files (*.*)";
   _caption = "Please select a file";
-  _actualPathName = QString();
   _mode = ModeUnspecified;
 
   connect( ui->btnBrowse, SIGNAL( clicked() ), this, SLOT( selectFileOrFolder() ) );
-  connect( this, SIGNAL( pathNameChanged( QString ) ), this, SLOT( updateLineEdit( QString ) ) );
-  connect( this, SIGNAL( pathNameChanged( QString ) ), ui->leFilePath, SLOT( setActualPathName( QString ) ) );
   connect( ui->leFilePath, SIGNAL( editingFinished() ), this, SLOT( slotEditingFinished() ) );
+
+  setReadOnly( false );
 
   ui->btnTest->setVisible( false );
   connect( ui->btnTest, SIGNAL( clicked() ), this, SLOT( debug() ) );
@@ -67,31 +86,50 @@ CFileSelect::~CFileSelect() {
 
 // Simple properties and helper functions
 //---------------------------------------
+void CFileSelect::setReadOnly( const bool readOnly ) {
+  ui->btnBrowse->setEnabled( !readOnly );
+  ui->leFilePath->setReadOnly( readOnly );
+
+  _isReadOnly = readOnly;
+}
+
+
 bool CFileSelect::dirExists() const {
   if( ModeExistingDir == this->_mode )
     return fileExists();
   else {
-    return QFileInfo( _actualPathName ).dir().exists();
+    return QFileInfo( ui->leFilePath->_actualPathName ).dir().exists();
   }
 }
 
+
 bool CFileSelect::fileExists() const {
-  return QFileInfo( _actualPathName ).exists();
+  return QFileInfo( ui->leFilePath->_actualPathName ).exists();
 }
+
 
 void CFileSelect::clearPath() {
-  if( !_actualPathName.isEmpty() )
-    _lastUsedPath = _actualPathName;
+  if( _isReadOnly )
+    return;
 
-  _actualPathName = QString();
-  emit pathNameChanged( _actualPathName );
+  if( !ui->leFilePath->_actualPathName.isEmpty() )
+    _lastUsedPath = ui->leFilePath->_actualPathName;
+
+  ui->leFilePath->_actualPathName = QString();
+  ui->leFilePath->setText( "" );
+  emit pathNameChanged( ui->leFilePath->_actualPathName );
 }
+
+bool CFileSelect::isEmpty() const {
+  return ui->leFilePath->_actualPathName.isEmpty();
+}
+
 
 QString CFileSelect::startDirectory() {
   QFileInfo fi;
 
-  if( !_actualPathName.isEmpty() )
-    fi = QFileInfo( _actualPathName );
+  if( !ui->leFilePath->_actualPathName.isEmpty() )
+    fi = QFileInfo( ui->leFilePath->_actualPathName );
   else if( !_lastUsedPath.isEmpty() )
     fi = QFileInfo( _lastUsedPath );
 
@@ -101,9 +139,11 @@ QString CFileSelect::startDirectory() {
     return fi.absolutePath();
 }
 
+
 void CFileSelect::setLabel( const QString& val ){
   ui->label->setText( val );
 }
+
 
 QString CFileSelect::label() const {
   return ui->label->text();
@@ -125,9 +165,9 @@ QString CFileSelect::directory( void ) const {
   Q_ASSERT( ModeUnspecified != _mode );
 
   if( ModeExistingDir & _mode )
-    return QFileInfo( _actualPathName ).absoluteFilePath();
+    return QFileInfo( ui->leFilePath->_actualPathName ).absoluteFilePath();
   else if( ModeUnspecified != _mode )
-    return QFileInfo( _actualPathName ).absolutePath();
+    return QFileInfo( ui->leFilePath->_actualPathName ).absolutePath();
   else
     return QString();
 }
@@ -137,26 +177,33 @@ QString CFileSelect::pathName( void ) const {
   Q_ASSERT( ModeUnspecified != _mode );
 
   if( ModeUnspecified != _mode )
-    return QFileInfo( _actualPathName ).absoluteFilePath();
+    return QFileInfo( ui->leFilePath->_actualPathName ).absoluteFilePath();
   else
     return QString();
 }
 
 
 void CFileSelect::selectFolder() {
+  if( _isReadOnly )
+    return;
+
   QString selectedDirectory;
   QString startingDirectory = startDirectory();
 
   selectedDirectory = QFileDialog::getExistingDirectory( this, _caption, startingDirectory );
 
   if( !selectedDirectory.isEmpty() ) {
-    _actualPathName = selectedDirectory;
-    emit pathNameChanged( _actualPathName );
+    ui->leFilePath->_actualPathName = selectedDirectory;
+    ui->leFilePath->setText( abbreviatePath( ui->leFilePath->_actualPathName, 90 ) );
+    emit pathNameChanged( ui->leFilePath->_actualPathName );
   }
 }
 
 
 void CFileSelect::selectFile() {
+  if( _isReadOnly )
+    return;
+
   QString startingDirectory = startDirectory();
   QString selectedFile;
   QFileDialog dialog(this);
@@ -185,13 +232,17 @@ void CFileSelect::selectFile() {
   }
 
   if( !selectedFile.isEmpty() ) {
-    _actualPathName = selectedFile;
-    emit pathNameChanged( _actualPathName );
+    ui->leFilePath->_actualPathName = selectedFile;
+    ui->leFilePath->setText( abbreviatePath( ui->leFilePath->_actualPathName, 90 ) );
+    emit pathNameChanged( ui->leFilePath->_actualPathName );
   }
 }
 
 
 void CFileSelect::selectFileOrFolder() {
+  if( _isReadOnly )
+    return;
+
   if( _mode & ModeExistingDir )
     selectFolder();
   else
@@ -200,21 +251,54 @@ void CFileSelect::selectFileOrFolder() {
 
 
 void CFileSelect::setPathName( const QString& val ) {
-  _actualPathName = val.trimmed();
-  emit pathNameChanged( _actualPathName );
+  if( _isReadOnly )
+    return;
+
+  ui->leFilePath->_actualPathName = val.trimmed();
+  ui->leFilePath->setText( abbreviatePath( ui->leFilePath->_actualPathName, 90 ) );
+  emit pathNameChanged( ui->leFilePath->_actualPathName );
 }
 
 
 // Events, etc.
 //-------------
-void CFileSelect::updateLineEdit( QString newPathName ) {
-  ui->leFilePath->setText( abbreviatePath( newPathName, 90 ) );
+void CMyLineEdit::focusInEvent( QFocusEvent* event ) {
+  QLineEdit::focusInEvent( event );
+  // qDebug() << "focusInEvent" << _actualPathName;
+  this->setText( _actualPathName );
+  this->setCursorPosition( this->text().length() - 1 ); // Works with tab, but not on mouse click.  Use release event to catch mouse activity.
+}
+
+
+void CMyLineEdit::focusOutEvent( QFocusEvent* event ) {
+  _firstClick = true;
+  _actualPathName = this->text().trimmed();
+  this->setText( abbreviatePath( _actualPathName, 90 ) );
+
+  //qDebug() << "focusOutEvent" << _actualPathName;
+  QLineEdit::focusOutEvent( event );
+}
+
+
+void CMyLineEdit::mousePressEvent(QMouseEvent* event ) {
+  //qDebug() << "Mouse press event";
+  QLineEdit::mousePressEvent( event );
+}
+
+
+void CMyLineEdit::mouseReleaseEvent(QMouseEvent* event) {
+  //qDebug() << "Mouse release event";
+  QLineEdit::mouseReleaseEvent( event );
+  if( _firstClick ) {
+    this->setCursorPosition( this->text().length() );
+    _firstClick = false;
+  }
 }
 
 
 void CFileSelect::slotEditingFinished() {
-  _actualPathName = ui->leFilePath->text().trimmed();
-  emit pathNameChanged( _actualPathName );
+  if( !_isReadOnly )
+    emit pathNameChanged( ui->leFilePath->_actualPathName );
 }
 
 

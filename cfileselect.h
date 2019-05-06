@@ -33,7 +33,11 @@ class CMyLineEdit : public QLineEdit {
 
   protected:
     void focusInEvent( QFocusEvent* event );
+    void focusOutEvent( QFocusEvent* event );
+    void mousePressEvent(QMouseEvent* event );
+    void mouseReleaseEvent(QMouseEvent* event);
 
+    bool _firstClick;
     QString _actualPathName;
 };
 
@@ -73,6 +77,9 @@ class CFileSelect : public QWidget {
     void setCaption( const QString& val ) { _caption = val; }
     QString caption() const { return _caption; }
 
+    // FIXME: Make these play nicely with isEnabled.
+    void setReadOnly(const bool readOnly );
+    bool isReadOnly() const { return _isReadOnly; }
 
     // The functions that do the work
     //-------------------------------
@@ -85,7 +92,7 @@ class CFileSelect : public QWidget {
     void setFilename( const QString& val ) { setPathName( val ); } // a simple synonym for pathName
 
     void clearPath(); // Blows away any specified path
-    bool isEmpty() const { return _actualPathName.isEmpty(); } // Indicates whether a path (either file or directory) has been set.
+    bool isEmpty() const; // Indicates whether a path (either file or directory) has been set.
 
     bool dirExists() const;
     bool fileExists() const;
@@ -98,11 +105,11 @@ class CFileSelect : public QWidget {
 
   protected slots:
     void selectFileOrFolder(); // Called when the button is clicked
-    void updateLineEdit( QString newPathName );
+    //void updateLineEdit( QString newPathName );
     void slotEditingFinished();
 
   signals:
-    void pathNameChanged( QString newPathName );  // Used internally.  Of possible interest externally as well.
+    void pathNameChanged( QString newPathName );
 
   protected:
     void selectFolder();
@@ -113,8 +120,9 @@ class CFileSelect : public QWidget {
     QString _caption;
     int _mode;
 
-    QString _actualPathName;
     QString _lastUsedPath;
+
+    bool _isReadOnly;
 
   private:
     Ui::CFileSelect *ui;
