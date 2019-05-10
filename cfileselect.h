@@ -56,7 +56,7 @@ class CFileSelect : public QWidget {
     };
 
     explicit CFileSelect( QWidget* parent = nullptr, Qt::WindowFlags f = nullptr );
-    ~CFileSelect( void );
+    ~CFileSelect();
 
     // Properties
     //-----------
@@ -83,9 +83,9 @@ class CFileSelect : public QWidget {
 
     // The functions that do the work
     //-------------------------------
-    QString pathName( void ) const;
-    QString directory( void ) const;
-    QString filename( void ) const { return pathName(); } // a simple synonym for pathName
+    QString pathName() const;
+    QString directory() const;
+    QString filename() const { return pathName(); } // a simple synonym for pathName
 
     void setPathName( const QString& val );
     void setDirectory( const QString& val ) { setPathName( val ); } // Internally the same as pathName. The class works out whether the user wants the directory or the file at the appropriate time.
@@ -98,7 +98,7 @@ class CFileSelect : public QWidget {
     bool fileExists() const;
 
     // FIXME: Make this a real function!
-    bool fileIsValid( void ) { return true; }
+    bool fileIsValid() { return true; }
 
   public slots:
     void debug();

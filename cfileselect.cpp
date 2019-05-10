@@ -161,7 +161,7 @@ void CFileSelect::debug() {
 
 // Getter and setter-type functions
 //---------------------------------
-QString CFileSelect::directory( void ) const {
+QString CFileSelect::directory() const {
   Q_ASSERT( ModeUnspecified != _mode );
 
   if( ModeExistingDir & _mode )
@@ -173,7 +173,7 @@ QString CFileSelect::directory( void ) const {
 }
 
 
-QString CFileSelect::pathName( void ) const {
+QString CFileSelect::pathName() const {
   Q_ASSERT( ModeUnspecified != _mode );
 
   if( ModeUnspecified != _mode )
