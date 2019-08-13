@@ -264,7 +264,7 @@ void CFileSelect::setPathName( const QString& val ) {
 //-------------
 void CMyLineEdit::focusInEvent( QFocusEvent* event ) {
   QLineEdit::focusInEvent( event );
-  // qDebug() << "focusInEvent" << _actualPathName;
+  // qDb() << "focusInEvent" << _actualPathName;
   this->setText( _actualPathName );
   this->setCursorPosition( this->text().length() - 1 ); // Works with tab, but not on mouse click.  Use release event to catch mouse activity.
 }
@@ -275,19 +275,19 @@ void CMyLineEdit::focusOutEvent( QFocusEvent* event ) {
   _actualPathName = this->text().trimmed();
   this->setText( abbreviatePath( _actualPathName, 90 ) );
 
-  //qDebug() << "focusOutEvent" << _actualPathName;
+  //qDb() << "focusOutEvent" << _actualPathName;
   QLineEdit::focusOutEvent( event );
 }
 
 
 void CMyLineEdit::mousePressEvent(QMouseEvent* event ) {
-  //qDebug() << "Mouse press event";
+  //qDb() << "Mouse press event";
   QLineEdit::mousePressEvent( event );
 }
 
 
 void CMyLineEdit::mouseReleaseEvent(QMouseEvent* event) {
-  //qDebug() << "Mouse release event";
+  //qDb() << "Mouse release event";
   QLineEdit::mouseReleaseEvent( event );
   if( _firstClick ) {
     this->setCursorPosition( this->text().length() );

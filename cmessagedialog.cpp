@@ -127,7 +127,7 @@ void CMessageDialog::setTextFromFile( const QString& filename ) {
   QFile file( filename );
   if( !file.open(QIODevice::ReadOnly | QIODevice::Text ) ) {
     _error = true;
-    _errMsg = "Could not read from file 'filename'";
+    _errMsg = QStringLiteral("Could not read from file 'filename'");
     return;
   }
 
@@ -154,22 +154,22 @@ QString CMessageDialog::text() {
 
 void CMessageDialog::copyToClipboard() {
   QApplication::clipboard()->setText( ui->plainTextEdit->toPlainText() );
-  QMessageBox::information( this, "Message copied", "Contents of this message have been copied to the clipboard." );
+  QMessageBox::information( this, QStringLiteral("Message copied"), QStringLiteral("Contents of this message have been copied to the clipboard.") );
 }
 
 
 void CMessageDialog::save() {
   QString s = QFileDialog::getSaveFileName(
     this,
-    "Save message as file",
+    QStringLiteral("Save message as file"),
     QDir::currentPath(),
-    "Plain-text files (*.txt);; All files (*.*)"
+    QStringLiteral("Plain-text files (*.txt);; All files (*.*)")
   );
 
   if( !s.isEmpty() ) {
     QFile file( s );
     if( !file.open( QFile::WriteOnly | QFile::Truncate ) )
-      QMessageBox::warning( this, "Cannot write file", QString( "Cannot open error log for writing: %1" ).arg( s ) );
+      QMessageBox::warning( this, QStringLiteral("Cannot write file"), QStringLiteral( "Cannot open error log for writing: %1" ).arg( s ) );
     else {
       QTextStream out( &file );
       out << ui->plainTextEdit->toPlainText();
@@ -186,9 +186,6 @@ void CMessageDialog::setDimensions( const int newWidth, const int newHeight ) {
 
     QPoint parentPosGlobal = parent->mapToGlobal(parent->pos());
     QPoint newPos = parent->mapFromGlobal( QPoint( parentPosGlobal.x() + parent->width()/2 - newWidth/2, parentPosGlobal.y() + parent->height()/2 - newHeight/2 ) );
-    qDebug() << parent->pos();
-    qDebug() << parentPosGlobal;
-    qDebug() << newPos;
 
     this->setGeometry(
       newPos.x(),
