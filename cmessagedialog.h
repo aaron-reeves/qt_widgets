@@ -22,6 +22,15 @@ namespace Ui {
 class CMessageDialog;
 }
 
+/*
+ * Typical usage:
+ * CMessageDialog dlg( this );
+ * dlg.setWindowTitle( QStringLiteral("My window title") );
+ * dlg.setCaption( QStringLiteral("My message caption:") );
+ * dlg.setText( QStringLiteral("My lengthy message goes in here.") );
+ * dlg.exec();
+*/
+
 class CMessageDialog : public QDialog {
   Q_OBJECT
 
