@@ -1,3 +1,9 @@
+/*
+  Author: Aaron Reeves <aaron.reeves@sruc.ac.uk>
+  A basic form for showing an "About" window/message in a grapical application.
+*/
+
+
 #ifndef CABOUTFORM_H
 #define CABOUTFORM_H
 
