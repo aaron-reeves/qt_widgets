@@ -55,7 +55,7 @@ CMyLineEdit::CMyLineEdit( QWidget* parent ) : QLineEdit( parent ) {
  * dropEvent(QDropEvent *)
  */
 
-void CMyLineEdit::setActualPathName( QString val ) {
+void CMyLineEdit::setActualPathName( const QString& val ) {
   _actualPathName = val;
 }
 
@@ -66,8 +66,8 @@ CFileSelect::CFileSelect( QWidget* parent, Qt::WindowFlags f ) : QWidget( parent
   this->setFocusProxy( ui->leFilePath );
 
   // Filter format: "Plain text files (*.txt);; All Files (*.*)"
-  _filter = "All Files (*.*)";
-  _caption = "Please select a file";
+  _filter = QStringLiteral( "All Files (*.*)" );
+  _caption = QStringLiteral( "Please select a file" );
   _mode = ModeUnspecified;
 
   connect( ui->btnBrowse, SIGNAL( clicked() ), this, SLOT( selectFileOrFolder() ) );
@@ -104,7 +104,7 @@ bool CFileSelect::dirExists() const {
 
 
 bool CFileSelect::fileExists() const {
-  return QFileInfo( ui->leFilePath->_actualPathName ).exists();
+  return QFileInfo::exists( ui->leFilePath->_actualPathName );
 }
 
 
@@ -116,7 +116,7 @@ void CFileSelect::clearPath() {
     _lastUsedPath = ui->leFilePath->_actualPathName;
 
   ui->leFilePath->_actualPathName = QString();
-  ui->leFilePath->setText( "" );
+  ui->leFilePath->setText( QString() );
   emit pathNameChanged( ui->leFilePath->_actualPathName );
 }
 
@@ -220,7 +220,7 @@ void CFileSelect::selectFile() {
     if( dialog.exec() )
       selectedFile = dialog.selectedFiles().at(0);
     else
-      selectedFile = "";
+      selectedFile = QString();
   }
   else if( _mode & ModeSaveFile ) {
     selectedFile = QFileDialog::getSaveFileName( this, _caption, startingDirectory, _filter );
@@ -228,7 +228,7 @@ void CFileSelect::selectFile() {
   else {
     qDb() << "There is a problem in CFileSelect::selectFile()" << _mode;
     Q_ASSERT( false );
-    selectedFile = "";
+    selectedFile = QString();
   }
 
   if( !selectedFile.isEmpty() ) {

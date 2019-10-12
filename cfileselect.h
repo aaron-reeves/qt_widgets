@@ -29,13 +29,13 @@ class CMyLineEdit : public QLineEdit {
     CMyLineEdit( QWidget* parent = nullptr );
 
   protected slots:
-    void setActualPathName( QString val );
+    void setActualPathName( const QString& val );
 
   protected:
     void focusInEvent( QFocusEvent* event );
     void focusOutEvent( QFocusEvent* event );
-    void mousePressEvent(QMouseEvent* event );
-    void mouseReleaseEvent(QMouseEvent* event);
+    void mousePressEvent( QMouseEvent* event );
+    void mouseReleaseEvent( QMouseEvent* event);
 
     bool _firstClick;
     QString _actualPathName;
