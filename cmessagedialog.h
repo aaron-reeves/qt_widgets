@@ -4,7 +4,7 @@ cmessagedialog.h/cpp
 Begin: 2008/02/18
 Author: Aaron Reeves <aaron.reeves@naadsm.org>
 --------------------------------------------------
-Copyright (C) 2008 Aaron Reeves
+Copyright (C) 2008 - 2019 Aaron Reeves
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2 of the License, or
