@@ -25,17 +25,17 @@ Public License as published by the Free Software Foundation; either version 2 of
 CAboutForm::CAboutForm(QWidget *parent) :  QDialog(parent), ui(new Ui::CAboutForm) {
   ui->setupUi( this );
 
-  QString appVersion = QString( APP_VERSION );
+  QString appVersion = QStringLiteral( APP_VERSION );
   QStringList bits = appVersion.split( '.' );
 
-  QDate buildDate = QDate::fromString( bits.last(), "yyyyMMdd" );
+  QDate buildDate = QDate::fromString( bits.last(), QStringLiteral("yyyyMMdd") );
 
   bits.removeLast();
-  QString versString = QString( "%1 %2" ).arg( APP_NAME ).arg( bits.join( '.' ) );
+  QString versString = QStringLiteral( "%1 %2" ).arg( QStringLiteral(APP_NAME), bits.join( '.' ) );
 
   this->setWindowTitle( versString );
   ui->lblAppName->setText( versString );
-  ui->lblBuildDate->setText( QString( "Build date: %1" ).arg( buildDate.toString( "MMM dd, yyyy") ) );
+  ui->lblBuildDate->setText( QStringLiteral( "Build date: %1" ).arg( buildDate.toString( QStringLiteral("MMM dd, yyyy")) ) );
 
   ui->lblPixmap->setStyleSheet( QString() );
 
@@ -73,14 +73,14 @@ void CAboutForm::setCopyright( const QString& copyright ) {
 
 
 void CAboutForm::setAuthor( const QString& author ) {
-  ui->lblAuthor->setText( QString( "Author: %1" ).arg( author ) );
+  ui->lblAuthor->setText( QStringLiteral( "Author: %1" ).arg( author ) );
 }
 
 
 void CAboutForm::sendEmail() {
-  if( !QDesktopServices::openUrl( QUrl( QString( "mailto:%1" ).arg( _emailAddress ) ) ) ) {
+  if( !QDesktopServices::openUrl( QUrl( QStringLiteral( "mailto:%1" ).arg( _emailAddress ) ) ) ) {
     QMessageBox mbx( this );
-    mbx.setText( "Email could not be sent. Please ensure that your email application is installed and properly configured to handle links." );
+    mbx.setText( QStringLiteral("Email could not be sent. Please ensure that your email application is installed and properly configured to handle links.") );
     mbx.setIcon( QMessageBox::Warning );
     mbx.setWindowIcon( this->windowIcon() );
     mbx.exec();
@@ -89,9 +89,9 @@ void CAboutForm::sendEmail() {
 
 
 void CAboutForm::showLicense() {
-  CMessageDialog dlg( "License", "This application is released under the terms of the following license:", QMessageBox::NoIcon, this );
+  CMessageDialog dlg( QStringLiteral("License"), QStringLiteral("This application is released under the terms of the following license:"), QMessageBox::NoIcon, this );
   dlg.setDimensions( 550, 400 );
-  dlg.setTextFromFile( ":/license/LICENSE.txt" );
+  dlg.setTextFromFile( QStringLiteral(":/license/LICENSE.txt") );
   dlg.exec();
 }
 
