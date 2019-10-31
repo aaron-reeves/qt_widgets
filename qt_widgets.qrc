@@ -4,4 +4,7 @@
         <file>handle3.png</file>
         <file>handle5.png</file>
     </qresource>
+    <qresource prefix="/license">
+        <file>LICENSE.txt</file>
+    </qresource>
 </RCC>
