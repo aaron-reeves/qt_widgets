@@ -35,13 +35,28 @@ class CAboutForm : public QDialog {
     void setBriefDescr( const QString& descr );
     void setCopyright( const QString& copyright );
     void setAuthor( const QString& author );
+    void setWebsite( QString website );
+
+    // Author field is visible by default
+    void hideAuthor();
+    void showAuthor();
+
+    // Email field is visible by default
+    void hideEmail();
+    void showEmail();
+
+    // Website field is hidden by default
+    void hideWebsite();
+    void showWebsite();
 
   protected slots:
     void sendEmail();
+    void visitWebsite();
     void showLicense();
 
   protected:
     QString _emailAddress;
+    QString _website;
 
   private:
     Ui::CAboutForm *ui;
