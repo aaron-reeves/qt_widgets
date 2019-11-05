@@ -31,6 +31,7 @@ class CAboutForm : public QDialog {
     ~CAboutForm();
 
     void setPixmap( const QString& filename );
+    void setAppName( const QString& appName );
     void setEmailAddress( const QString& address );
     void setBriefDescr( const QString& descr );
     void setCopyright( const QString& copyright );

@@ -53,6 +53,10 @@ CAboutForm::~CAboutForm() {
   delete ui;
 }
 
+void CAboutForm::setAppName( const QString& appName ) {
+  ui->lblAppName->setText( appName );
+}
+
 
 void CAboutForm::setPixmap( const QString& filename ) {
   ui->lblPixmap->setPixmap( QPixmap( filename ) );
