@@ -43,7 +43,6 @@ class CMessageDialog : public QDialog {
     void setLineWrapMode( QPlainTextEdit::LineWrapMode mode );
 
     void clear();
-    void append( const QString& str );
     void setText( const QString& body );
     void setText( const QStringList& list );
     void setTextFromFile( const QString& filename );
@@ -54,6 +53,9 @@ class CMessageDialog : public QDialog {
 
     bool error() const { return _error; }
     QString errorMessage() const { return _errMsg; }
+
+  public slots:
+    void append( const QString& str );
 
   protected slots:
     void copyToClipboard();

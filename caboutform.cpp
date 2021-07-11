@@ -25,6 +25,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 CAboutForm::CAboutForm(QWidget *parent) :  QDialog(parent), ui(new Ui::CAboutForm) {
   ui->setupUi( this );
 
+  hideWebsite();
+
   QString appVersion = QStringLiteral( APP_VERSION );
   QStringList bits = appVersion.split( '.' );
 
@@ -43,11 +45,16 @@ CAboutForm::CAboutForm(QWidget *parent) :  QDialog(parent), ui(new Ui::CAboutFor
   connect( ui->btnLicense, SIGNAL( clicked() ), this, SLOT( showLicense() ) );
 
   connect( ui->lblEmail, SIGNAL( clicked() ), this, SLOT( sendEmail() ) );
+  connect( ui->lblWebsite2, SIGNAL( clicked() ), this, SLOT( visitWebsite() ) );
 }
 
 
 CAboutForm::~CAboutForm() {
   delete ui;
+}
+
+void CAboutForm::setAppName( const QString& appName ) {
+  ui->lblAppName->setText( appName );
 }
 
 
@@ -77,10 +84,54 @@ void CAboutForm::setAuthor( const QString& author ) {
 }
 
 
+void CAboutForm::setWebsite( QString website ) {
+  _website = website;
+  ui->lblWebsite2->setText( website.replace( QRegExp("^(http)(s)?(://)"), QString() ) );
+}
+
+// Author field is visible by default
+void CAboutForm::hideAuthor() {
+  ui->lblAuthor->setVisible( false );
+}
+
+void CAboutForm::showAuthor() {
+  ui->lblAuthor->setVisible( true );
+}
+
+void CAboutForm::hideEmail() {
+  ui->lblEmail->setVisible( false );
+}
+
+void CAboutForm::showEmail() {
+  ui->lblEmail->setVisible( true );
+}
+
+void CAboutForm::hideWebsite() {
+  ui->lblWebsite1->setVisible( false );
+  ui->lblWebsite2->setVisible( false );
+}
+
+void CAboutForm::showWebsite() {
+  ui->lblWebsite1->setVisible( true );
+  ui->lblWebsite2->setVisible( true );
+}
+
+
+
 void CAboutForm::sendEmail() {
   if( !QDesktopServices::openUrl( QUrl( QStringLiteral( "mailto:%1" ).arg( _emailAddress ) ) ) ) {
     QMessageBox mbx( this );
     mbx.setText( QStringLiteral("Email could not be sent. Please ensure that your email application is installed and properly configured to handle links.") );
+    mbx.setIcon( QMessageBox::Warning );
+    mbx.setWindowIcon( this->windowIcon() );
+    mbx.exec();
+  }
+}
+
+void CAboutForm::visitWebsite() {
+  if( !QDesktopServices::openUrl( QUrl( _website ) ) ) {
+    QMessageBox mbx( this );
+    mbx.setText( QStringLiteral("Link could not be opened. Please ensure that your browser is installed and properly configured.") );
     mbx.setIcon( QMessageBox::Warning );
     mbx.setWindowIcon( this->windowIcon() );
     mbx.exec();

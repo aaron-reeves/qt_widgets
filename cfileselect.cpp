@@ -63,7 +63,7 @@ void CMyLineEdit::setActualPathName( const QString& val ) {
 CFileSelect::CFileSelect( QWidget* parent, Qt::WindowFlags f ) : QWidget( parent, f ), ui(new Ui::CFileSelect) {
   ui->setupUi(this);
 
-  this->setFocusProxy( ui->leFilePath );
+  this->setFocusProxy( ui->btnBrowse );
 
   // Filter format: "Plain text files (*.txt);; All Files (*.*)"
   _filter = QStringLiteral( "All Files (*.*)" );
