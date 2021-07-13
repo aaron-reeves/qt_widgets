@@ -125,18 +125,25 @@ bool CFileSelect::isEmpty() const {
 }
 
 
-QString CFileSelect::startDirectory() {
+QString CFileSelect::startDirectory() const {
   QFileInfo fi;
 
-  if( !ui->leFilePath->_actualPathName.isEmpty() )
+  if( !ui->leFilePath->_actualPathName.isEmpty() ) {
     fi = QFileInfo( ui->leFilePath->_actualPathName );
-  else if( !_lastUsedPath.isEmpty() )
+  }
+  else if( !ui->leFilePath->_initialDirectory.isEmpty() ) {
+    fi = QFileInfo( ui->leFilePath->_initialDirectory );
+  }
+  else if( !_lastUsedPath.isEmpty() ) {
     fi = QFileInfo( _lastUsedPath );
+  }
 
-  if( fi.isDir() )
+  if( fi.isDir() ) {
     return fi.absoluteFilePath();
-  else
+  }
+  else {
     return fi.absolutePath();
+  }
 }
 
 
@@ -153,7 +160,7 @@ QString CFileSelect::label() const {
 void CFileSelect::debug() {
   qDb() << "Mode:" << this->mode();
   qDb() << "Filter:" << this->specifiedFilter();
-  qDb() << "File name:" << this->pathName();
+  qDb() << "File name:" << this->filePath();
   qDb() << "Directory name:" << this->directory();
   qDb() << "Last used path:" << _lastUsedPath;
 }
@@ -162,7 +169,7 @@ void CFileSelect::debug() {
 // Getter and setter-type functions
 //---------------------------------
 QString CFileSelect::directory() const {
-  Q_ASSERT( ModeUnspecified != _mode );
+  Q_ASSERT_X( ModeUnspecified != _mode, "CFileSelect::directory()", "Mode is unspecified." );
 
   if( ModeExistingDir & _mode )
     return QFileInfo( ui->leFilePath->_actualPathName ).absoluteFilePath();
@@ -173,8 +180,8 @@ QString CFileSelect::directory() const {
 }
 
 
-QString CFileSelect::pathName() const {
-  Q_ASSERT( ModeUnspecified != _mode );
+QString CFileSelect::filePath() const {
+  Q_ASSERT_X( ModeUnspecified != _mode, "CFileSelect::pathName()", "Mode is unspecified." );
 
   if( ModeUnspecified != _mode )
     return QFileInfo( ui->leFilePath->_actualPathName ).absoluteFilePath();
@@ -184,13 +191,13 @@ QString CFileSelect::pathName() const {
 
 
 void CFileSelect::selectFolder() {
-  if( _isReadOnly )
+  if( _isReadOnly ) {
     return;
+  }
 
   QString selectedDirectory;
-  QString startingDirectory = startDirectory();
 
-  selectedDirectory = QFileDialog::getExistingDirectory( this, _caption, startingDirectory );
+  selectedDirectory = QFileDialog::getExistingDirectory( this, _caption, startDirectory() );
 
   if( !selectedDirectory.isEmpty() ) {
     ui->leFilePath->_actualPathName = selectedDirectory;
@@ -201,15 +208,15 @@ void CFileSelect::selectFolder() {
 
 
 void CFileSelect::selectFile() {
-  if( _isReadOnly )
+  if( _isReadOnly ) {
     return;
+  }
 
-  QString startingDirectory = startDirectory();
   QString selectedFile;
   QFileDialog dialog(this);
 
   if( _mode & ModeOpenFile ) {
-    dialog.setDirectory( startingDirectory );
+    dialog.setDirectory( startDirectory() );
     dialog.setNameFilter( _filter );
 
     if( _mode & ModeExistingFile )
@@ -223,7 +230,7 @@ void CFileSelect::selectFile() {
       selectedFile = QString();
   }
   else if( _mode & ModeSaveFile ) {
-    selectedFile = QFileDialog::getSaveFileName( this, _caption, startingDirectory, _filter );
+    selectedFile = QFileDialog::getSaveFileName( this, _caption, startDirectory(), _filter );
   }
   else {
     qDb() << "There is a problem in CFileSelect::selectFile()" << _mode;
@@ -240,23 +247,45 @@ void CFileSelect::selectFile() {
 
 
 void CFileSelect::selectFileOrFolder() {
-  if( _isReadOnly )
+  if( _isReadOnly ) {
     return;
+  }
 
-  if( _mode & ModeExistingDir )
+  if( _mode & ModeExistingDir ) {
     selectFolder();
-  else
+  }
+  else {
     selectFile();
+  }
 }
 
 
-void CFileSelect::setPathName( const QString& val ) {
-  if( _isReadOnly )
+void CFileSelect::setFilePath( const QString& val ) {
+  if( _isReadOnly ) {
     return;
+  }
 
   ui->leFilePath->_actualPathName = val.trimmed();
   ui->leFilePath->setText( abbreviatePath( ui->leFilePath->_actualPathName, 90 ) );
   emit pathNameChanged( ui->leFilePath->_actualPathName );
+}
+
+
+void CFileSelect::setDirectory( const QString& val ) {
+  if( _isReadOnly ) {
+    return;
+  }
+
+  QFileInfo fi( val.trimmed() );
+  if( fi.exists() ) {
+    if( fi.isDir() ) {
+      ui->leFilePath->_initialDirectory = val.trimmed();
+      setFilePath( QString() );
+    }
+    else {
+      setFilePath( val );
+    }
+  }
 }
 
 

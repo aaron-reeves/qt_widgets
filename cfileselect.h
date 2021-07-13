@@ -39,6 +39,7 @@ class CMyLineEdit : public QLineEdit {
 
     bool _firstClick;
     QString _actualPathName;
+    QString _initialDirectory;
 };
 
 
@@ -83,13 +84,15 @@ class CFileSelect : public QWidget {
 
     // The functions that do the work
     //-------------------------------
-    QString pathName() const;
+    QString filePath() const;  // Returns the file name, including the path
     QString directory() const;
-    QString filename() const { return pathName(); } // a simple synonym for pathName
+    QString fileName() const { if( fileExists() ) return QFileInfo( filePath() ).fileName(); else return QString(); }
+    //QString filename() const { return filePath(); } // FIXME: Make this go away!  Use filePath() instead, for consistency with QFileInfo.
+    QString fileType() const { if( fileExists() ) return QFileInfo( filePath() ).suffix(); else return QString(); }
 
-    void setPathName( const QString& val );
-    void setDirectory( const QString& val ) { setPathName( val ); } // Internally the same as pathName. The class works out whether the user wants the directory or the file at the appropriate time.
-    void setFilename( const QString& val ) { setPathName( val ); } // a simple synonym for pathName
+    void setFilePath( const QString& val );
+    void setDirectory( const QString& val );
+    //void setFilename( const QString& val ) // FIXME: Make this go away!  Use setFilePath() instead, for consistency with QFileInfo.
 
     void clearPath(); // Blows away any specified path
     bool isEmpty() const; // Indicates whether a path (either file or directory) has been set.
@@ -114,7 +117,7 @@ class CFileSelect : public QWidget {
   protected:
     void selectFolder();
     void selectFile();
-    QString startDirectory(); // Helper used by selectFolder and selectFile
+    QString startDirectory() const; // Helper used by selectFolder and selectFile
 
     QString _filter;
     QString _caption;
