@@ -15,16 +15,26 @@ Public License as published by the Free Software Foundation, version 3.
 
 #include <ar_general_purpose/arcommon.h>
 
-CMultiProgressWidget::CMultiProgressWidget( QWidget *parent ) : QWidget(parent), ui(new Ui::CMultiProgressWidget) {
+CMultiProgressWidget::CMultiProgressWidget( QWidget *parent ) : QWidget(parent), _mutex( QMutex::Recursive ), ui(new Ui::CMultiProgressWidget) {
   ui->setupUi(this);
+
+  cancelClicked = false;
   ui->btnCancel->setEnabled( false );
-  connect( ui->btnCancel, SIGNAL( clicked(bool) ), this, SLOT( setProcessingCanceled(bool) ) );
+  ui->btnOK->setVisible( false );
+  connect( ui->btnCancel, SIGNAL( clicked(bool) ), this, SLOT( setProcessingCanceled() ) );
+  connect( ui->btnOK, SIGNAL( clicked(bool) ), this, SIGNAL( okButtonClicked() ) );
+
 }
 
 
-CMultiProgressWidget::CMultiProgressWidget( const QStringList& stepNames, QWidget *parent ) : QWidget(parent), ui(new Ui::CMultiProgressWidget) {
+CMultiProgressWidget::CMultiProgressWidget( const QStringList& stepNames, QWidget *parent ) : QWidget(parent), _mutex( QMutex::Recursive ), ui(new Ui::CMultiProgressWidget) {
   ui->setupUi(this);
-  connect( ui->btnCancel, SIGNAL( clicked(bool) ), this, SLOT( setProcessingCanceled(bool) ) );
+
+  cancelClicked = false;
+  ui->btnOK->setVisible( false );
+  connect( ui->btnCancel, SIGNAL( clicked(bool) ), this, SLOT( setProcessingCanceled() ) );
+  connect( ui->btnOK, SIGNAL( clicked(bool) ), this, SIGNAL( okButtonClicked() ) );
+
   setup( stepNames );
 }
 
@@ -34,10 +44,11 @@ CMultiProgressWidget::~CMultiProgressWidget() {
 }
 
 
-void CMultiProgressWidget::setProcessingCanceled( bool dummy ) {
-  Q_UNUSED( dummy );
+void CMultiProgressWidget::setProcessingCanceled() {
+  ui->lblCaption->setText( QStringLiteral( "Terminating process..." ) );
   cancelClicked = true;
   ui->btnCancel->setEnabled( false );
+  emit cancelButtonClicked();
 }
 
 
@@ -64,103 +75,183 @@ void CMultiProgressWidget::setup( const QStringList& stepNames ) {
 }
 
 
+void CMultiProgressWidget::setup( const QStringList& stepNames, const QStringList& captions ) {
+  Q_ASSERT( stepNames.count() == captions.count() );
+
+  setup( stepNames );
+
+  for( int i = 0; i < captions.count(); ++i ) {
+    setCaption( i, captions.at(i) );
+  }
+}
+
+
 void CMultiProgressWidget::setCaption( QString caption ) {
-  ui->lblCaption->setText( caption );
+  _mutex.lock();
+
+  if( !  cancelClicked ) {
+    _mainCaption = caption;
+    ui->lblCaption->setText( caption );
+  }
+
+  _mutex.unlock();
 }
 
 
 void CMultiProgressWidget::start() {
+  _mutex.lock();
+
   for( int i = 0; i < _progressWidgetsList.count(); ++i ) {
     _progressWidgetsList.at(i)->restart();
   }
 
   cancelClicked = false;
 
+  if( !_mainCaption.isEmpty() ) {
+    setCaption( _mainCaption );
+  }
+
   this->clearMessages();
 
+  ui->btnOK->setVisible( false );
+  ui->btnCancel->setVisible( true );
   ui->btnCancel->setEnabled( true );
+
+  _mutex.unlock();
 }
 
 
 void CMultiProgressWidget::start( int idx, int nSteps, QString caption ) {
-  Q_ASSERT( idx < _progressWidgetsList.count() );
+  _mutex.lock();
+  Q_ASSERT( ( 0 <= idx ) && ( idx < _progressWidgetsList.count() ) );
   _progressWidgetsList.at(idx)->start( nSteps, caption );
+  _mutex.unlock();
 }
 void CMultiProgressWidget::start( QString key, int nSteps, QString caption ) {
+  _mutex.lock();
   Q_ASSERT( _progressWidgetsHash.contains( key ) );
   _progressWidgetsHash.value(key)->start( nSteps, caption );
+  _mutex.unlock();
 }
 
 
 void CMultiProgressWidget::setCaption(int idx, QString caption ) {
-  Q_ASSERT( idx < _progressWidgetsList.count() );
+  _mutex.lock();
+  Q_ASSERT( ( 0 <= idx ) && ( idx < _progressWidgetsList.count() ) );
   _progressWidgetsList.at(idx)->setCaption( caption );
+  _mutex.unlock();
 }
-void CMultiProgressWidget::setCaption( QString key, QString caption ) {
-  Q_ASSERT( _progressWidgetsHash.contains( key ) );
-  _progressWidgetsHash.value(key)->setCaption( caption );
+void CMultiProgressWidget::setCaption( QString stepName, QString caption ) {
+  _mutex.lock();
+  Q_ASSERT( _progressWidgetsHash.contains( stepName ) );
+  _progressWidgetsHash.value(stepName)->setCaption( caption );
+  _mutex.unlock();
 }
 
 
 void CMultiProgressWidget::setNSteps( int idx, int nSteps ) {
-  Q_ASSERT( idx < _progressWidgetsList.count() );
+  _mutex.lock();
+  Q_ASSERT( ( 0 <= idx ) && ( idx < _progressWidgetsList.count() ) );
   _progressWidgetsList.at(idx)->setMaximum( nSteps );
+  _mutex.unlock();
 }
-void CMultiProgressWidget::setNSteps( QString key, int nSteps ) {
-  Q_ASSERT( _progressWidgetsHash.contains( key ) );
-  _progressWidgetsHash.value(key)->setMaximum( nSteps );
+void CMultiProgressWidget::setNSteps( QString stepName, int nSteps ) {
+  _mutex.lock();
+  Q_ASSERT( _progressWidgetsHash.contains( stepName ) );
+  _progressWidgetsHash.value(stepName)->setMaximum( nSteps );
+  _mutex.unlock();
 }
 
 
 void CMultiProgressWidget::setStepComplete( int idx, int step ) {
-  Q_ASSERT( idx < _progressWidgetsList.count() );
+  _mutex.lock();
+  Q_ASSERT( ( 0 <= idx ) && ( idx < _progressWidgetsList.count() ) );
   _progressWidgetsList.at(idx)->setValue( step );
+  _mutex.unlock();
 }
-void CMultiProgressWidget::setStepComplete( QString key, int step ) {
-  Q_ASSERT( _progressWidgetsHash.contains( key ) );
-  _progressWidgetsHash.value(key)->setValue( step );
+void CMultiProgressWidget::setStepComplete( QString stepName, int step ) {
+  _mutex.lock();
+  Q_ASSERT( _progressWidgetsHash.contains( stepName ) );
+  _progressWidgetsHash.value(stepName)->setValue( step );
+  _mutex.unlock();
 }
 
+
+void CMultiProgressWidget::incrementSteps( int idx ) {
+  _mutex.lock();
+  Q_ASSERT( ( 0 <= idx ) && ( idx < _progressWidgetsList.count() ) );
+  _progressWidgetsList.at(idx)->setValue( _progressWidgetsList.at(idx)->value() + 1 );
+  _mutex.unlock();
+}
+void CMultiProgressWidget::incrementSteps( QString stepName ) {
+  _mutex.lock();
+  Q_ASSERT( _progressWidgetsHash.contains( stepName ) );
+  _progressWidgetsHash.value(stepName)->setValue( _progressWidgetsHash.value(stepName)->value() + 1 );
+  _mutex.unlock();
+}
 
 void CMultiProgressWidget::progressComplete( int idx ) {
-  Q_ASSERT( idx < _progressWidgetsList.count() );
+  _mutex.lock();
+  Q_ASSERT( ( 0 <= idx ) && ( idx < _progressWidgetsList.count() ) );
   _progressWidgetsList.at(idx)->setComplete();
+  _mutex.unlock();
 }
-void CMultiProgressWidget::progressComplete( QString key ) {
-  Q_ASSERT( _progressWidgetsHash.contains( key ) );
-  _progressWidgetsHash.value(key)->setComplete();
+void CMultiProgressWidget::progressComplete( QString stepName ) {
+  _mutex.lock();
+  Q_ASSERT( _progressWidgetsHash.contains( stepName ) );
+  _progressWidgetsHash.value(stepName)->setComplete();
+  _mutex.unlock();
 }
 
 
 void CMultiProgressWidget::progressComplete() {
-  ui->lblCaption->setText( QStringLiteral( "Processing complete." ) );
+  _mutex.lock();
 
-  for( int i = 0; i < _progressWidgetsList.count(); ++i ) {
-    _progressWidgetsList.at(i)->setComplete();
+  if( cancelClicked ) {
+    setTerminated();
+  }
+  else {
+    ui->lblCaption->setText( QStringLiteral( "Processing complete." ) );
+
+    for( int i = 0; i < _progressWidgetsList.count(); ++i ) {
+      _progressWidgetsList.at(i)->setComplete();
+    }
+
+    ui->btnCancel->setVisible( false );
+    ui->btnOK->setVisible( true );
   }
 
-  ui->btnCancel->setEnabled( false );
+  _mutex.unlock();
 }
 
 
 void CMultiProgressWidget::setTerminated() {
+  _mutex.lock();
+
   ui->lblCaption->setText( QStringLiteral( "Processing terminated." ) );
 
   for( int i = 0; i < _progressWidgetsList.count(); ++i ) {
     _progressWidgetsList.at(i)->setTerminated();
   }
 
-  ui->btnCancel->setEnabled( false );
+  ui->btnCancel->setVisible( false );
+  ui->btnOK->setVisible( true );
+
+  _mutex.unlock();
 }
 
 
 void CMultiProgressWidget::clearMessages() {
+  _mutex.lock();
   ui->pteMessages->clear();
+  _mutex.unlock();
 }
 
 
 void CMultiProgressWidget::appendMessage( const QString msg ) {
+  _mutex.lock();
   ui->pteMessages->appendPlainText( msg );
+  _mutex.unlock();
 }
 
 
