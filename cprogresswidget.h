@@ -29,14 +29,14 @@ class CProgressWidget : public QWidget {
     ~CProgressWidget();
 
     static QString defaultStyle();
+    static QString errorStyle();
     static QString terminatedStyle();
 
     void setCaption( const QString& str );
 
     void restart();
     void start( const int nSteps, const QString& caption = QString() );
-    void setComplete();
-    void setTerminated();
+    void setComplete( const int result );
 
     void setValue( const int val );
     int value() const;

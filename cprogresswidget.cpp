@@ -15,6 +15,8 @@ Public License as published by the Free Software Foundation; either version 2 of
 #include "cprogresswidget.h"
 #include "ui_cprogresswidget.h"
 
+#include <ar_general_purpose/returncodes.h>
+
 CProgressWidget::CProgressWidget(QWidget *parent) : QWidget(parent), ui(new Ui::CProgressWidget) {
   ui->setupUi(this);
 }
@@ -41,6 +43,29 @@ QString CProgressWidget::defaultStyle() {
     " }                                 "
     " QProgressBar::chunk:horizontal {  "
     " background: rgb( 30, 86, 234 );   "
+    " margin-right: 2px; /* space */    "
+    " width: 8px;                       "
+    " }                                 "
+  );
+}
+
+
+QString CProgressWidget::errorStyle() {
+  return QString(
+    " QProgressBar:horizontal {         "
+    " border-top: 1px solid gray;       "
+    " border-left: 1px solid gray;      "
+    " border-bottom: 1px solid white;   "
+    " border-right: 1px solid white;    "
+    " border-radius: 0px;               "
+    " background: rgb( 212, 208, 200 ); "
+    " padding: 2px;                     "
+    " text-align: right;                "
+    " margin-right: 12ex;               "
+    " height: 15px;                     "
+    " }                                 "
+    " QProgressBar::chunk:horizontal {  "
+    " background: rgb( 253, 179, 3 );   "
     " margin-right: 2px; /* space */    "
     " width: 8px;                       "
     " }                                 "
@@ -87,7 +112,7 @@ void CProgressWidget::start( const int nSteps, const QString& caption /* = QStri
 
 
 void CProgressWidget::setValue( const int val ) {
-  _addlCaption = QString( "%1 of %2" ).arg( val, ui->progressBar->maximum() );
+  _addlCaption = QString( "%1 of %2" ).arg( val ).arg( ui->progressBar->maximum() );
   setCaption();
   ui->progressBar->setValue( val );
   QCoreApplication::processEvents();
@@ -140,7 +165,7 @@ void CProgressWidget::setCaption() {
 
 
 void CProgressWidget::restart() {
-  ui->progressBar->setStyleSheet( CProgressWidget:: defaultStyle() );
+  ui->progressBar->setStyleSheet( CProgressWidget::defaultStyle() );
   _addlCaption = QStringLiteral( "Starting..." );
 
   ui->progressBar->setMaximum( 1 );
@@ -150,27 +175,26 @@ void CProgressWidget::restart() {
 }
 
 
-void CProgressWidget::setComplete() {
-  ui->progressBar->setStyleSheet( CProgressWidget:: defaultStyle() );
+void CProgressWidget::setComplete( const int result ) {
+
+  if( ReturnCode::SUCCESS == result ) {
+    ui->progressBar->setStyleSheet( CProgressWidget::defaultStyle() );
+    _addlCaption = QStringLiteral( "Complete" );
+  }
+  else if( result & ReturnCode::PROCESSING_INTERRUPTED ) {
+    ui->progressBar->setStyleSheet( CProgressWidget::terminatedStyle() );
+    _addlCaption = QStringLiteral( "Terminated" );
+  }
+  else {
+    ui->progressBar->setStyleSheet( CProgressWidget::errorStyle() );
+    _addlCaption = QStringLiteral( "Complete with errors" );
+  }
 
   if( 0 == ui->progressBar->value() ) {
     ui->progressBar->setMaximum(1);
   }
   ui->progressBar->setValue( ui->progressBar->maximum() );
 
-  _addlCaption = QStringLiteral( "Complete" );
-  setCaption();
-}
 
-
-void CProgressWidget::setTerminated() {
-  ui->progressBar->setStyleSheet( terminatedStyle() );
-
-  if( 0 == ui->progressBar->value() ) {
-    ui->progressBar->setMaximum(1);
-  }
-  ui->progressBar->setValue( ui->progressBar->maximum() );
-
-  _addlCaption = QStringLiteral( "Terminated" );
   setCaption();
 }

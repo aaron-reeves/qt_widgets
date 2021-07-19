@@ -4,7 +4,7 @@ cmultiprogresswidget.ui/h/cpp
 Begin: 2019-06-18
 Author: Aaron Reeves <aaron@aaronreeves.com>
 ---------------------------------------------------
-Copyright (C) 2019- 2021 Aaron Reeves
+Copyright (C) 2019 - 2021 Aaron Reeves
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation, version 3.
@@ -12,6 +12,8 @@ Public License as published by the Free Software Foundation, version 3.
 
 #include "cmultiprogresswidget.h"
 #include "ui_cmultiprogresswidget.h"
+
+#include <QClipboard>
 
 #include <ar_general_purpose/arcommon.h>
 
@@ -21,8 +23,10 @@ CMultiProgressWidget::CMultiProgressWidget( QWidget *parent ) : QWidget(parent),
   cancelClicked = false;
   ui->btnCancel->setEnabled( false );
   ui->btnOK->setVisible( false );
+  ui->btnCopy->setEnabled( false );
   connect( ui->btnCancel, SIGNAL( clicked(bool) ), this, SLOT( setProcessingCanceled() ) );
   connect( ui->btnOK, SIGNAL( clicked(bool) ), this, SIGNAL( okButtonClicked() ) );
+  connect( ui->btnCopy, SIGNAL( clicked(bool) ), this, SLOT( copyMessages() ) );
 
 }
 
@@ -32,8 +36,10 @@ CMultiProgressWidget::CMultiProgressWidget( const QStringList& stepNames, QWidge
 
   cancelClicked = false;
   ui->btnOK->setVisible( false );
+  ui->btnCopy->setEnabled( false );
   connect( ui->btnCancel, SIGNAL( clicked(bool) ), this, SLOT( setProcessingCanceled() ) );
   connect( ui->btnOK, SIGNAL( clicked(bool) ), this, SIGNAL( okButtonClicked() ) );
+  connect( ui->btnCopy, SIGNAL( clicked(bool) ), this, SLOT( copyMessages() ) );
 
   setup( stepNames );
 }
@@ -190,48 +196,38 @@ void CMultiProgressWidget::incrementSteps( QString stepName ) {
   _mutex.unlock();
 }
 
-void CMultiProgressWidget::progressComplete( int idx ) {
+void CMultiProgressWidget::setProgressComplete( int idx, int result ) {
   _mutex.lock();
   Q_ASSERT( ( 0 <= idx ) && ( idx < _progressWidgetsList.count() ) );
-  _progressWidgetsList.at(idx)->setComplete();
+  _progressWidgetsList.at(idx)->setComplete( result );
   _mutex.unlock();
 }
-void CMultiProgressWidget::progressComplete( QString stepName ) {
+void CMultiProgressWidget::setProgressComplete( QString stepName, int result ) {
   _mutex.lock();
   Q_ASSERT( _progressWidgetsHash.contains( stepName ) );
-  _progressWidgetsHash.value(stepName)->setComplete();
+  _progressWidgetsHash.value(stepName)->setComplete( result );
   _mutex.unlock();
 }
 
 
-void CMultiProgressWidget::progressComplete() {
+void CMultiProgressWidget::setAllProgressComplete( int result ) {
   _mutex.lock();
 
   if( cancelClicked ) {
-    setTerminated();
+    ui->lblCaption->setText( QStringLiteral( "Processing terminated." ) );
+  }
+  else if( result & ReturnCode::PROCESSING_INTERRUPTED ) {
+    ui->lblCaption->setText( QStringLiteral( "Processing terminated." ) );
+  }
+  else if( ReturnCode::SUCCESS == result ) {
+    ui->lblCaption->setText( QStringLiteral( "Processing successful." ) );
   }
   else {
-    ui->lblCaption->setText( QStringLiteral( "Processing complete." ) );
-
-    for( int i = 0; i < _progressWidgetsList.count(); ++i ) {
-      _progressWidgetsList.at(i)->setComplete();
-    }
-
-    ui->btnCancel->setVisible( false );
-    ui->btnOK->setVisible( true );
+    ui->lblCaption->setText( QStringLiteral( "Processing completed with errors." ) );
   }
 
-  _mutex.unlock();
-}
-
-
-void CMultiProgressWidget::setTerminated() {
-  _mutex.lock();
-
-  ui->lblCaption->setText( QStringLiteral( "Processing terminated." ) );
-
   for( int i = 0; i < _progressWidgetsList.count(); ++i ) {
-    _progressWidgetsList.at(i)->setTerminated();
+    _progressWidgetsList.at(i)->setComplete( result );
   }
 
   ui->btnCancel->setVisible( false );
@@ -244,6 +240,7 @@ void CMultiProgressWidget::setTerminated() {
 void CMultiProgressWidget::clearMessages() {
   _mutex.lock();
   ui->pteMessages->clear();
+  ui->btnCopy->setEnabled( false );
   _mutex.unlock();
 }
 
@@ -251,7 +248,13 @@ void CMultiProgressWidget::clearMessages() {
 void CMultiProgressWidget::appendMessage( const QString msg ) {
   _mutex.lock();
   ui->pteMessages->appendPlainText( msg );
+  ui->btnCopy->setEnabled( true );
   _mutex.unlock();
+}
+
+
+void CMultiProgressWidget::copyMessages() {
+  QGuiApplication::clipboard()->setText( ui->pteMessages->toPlainText() );
 }
 
 
