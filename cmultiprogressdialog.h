@@ -32,7 +32,7 @@ class CMultiProgressDialog : public QDialog {
 
     int nBars() const;
 
-    bool* cancelClicked;
+    bool* cancelClickedPtr;
 
   public slots:
     // Call this before calling any other functions for the widget to operate correctly.
@@ -46,13 +46,13 @@ class CMultiProgressDialog : public QDialog {
     void setCaption( int idx, QString caption );
     void setCaption( QString stepName, QString caption );
 
-    // Start an individual progress bar, informing it of how many total steps it will ultimately have
+    // Start an individual progress bar, informing it of how many total steps it will ultimately have.
     void start( int idx, int nSteps, QString caption );
     void start( QString key, int nSteps, QString caption );
 
     // Tell an individual progress bar how many total steps it has.
-    void setNSteps( int idx, int nSteps );
-    void setNSteps( QString stepName, int nSteps );
+    void setNStepsToBeCompleted( int idx, int nSteps );
+    void setNStepsToBeCompleted( QString stepName, int nSteps );
 
     // Tell an individual progress bar how far it's made it.
     void setStepComplete( int idx, int step );

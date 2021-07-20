@@ -16,7 +16,7 @@ Public License as published by the Free Software Foundation, version 3.
 CMultiProgressDialog::CMultiProgressDialog( QWidget *parent ) : QDialog (parent ), ui( new Ui::CMultiProgressDialog ) {
   ui->setupUi( this );
 
-  cancelClicked = &ui->progress->cancelClicked;
+  cancelClickedPtr = &ui->progress->cancelClicked;
 
   connect( ui->progress, SIGNAL( cancelButtonClicked() ), this, SIGNAL( cancelButtonClicked() ) );
   connect( ui->progress, SIGNAL( okButtonClicked() ), this, SIGNAL( okButtonClicked() ) );
@@ -76,13 +76,13 @@ void CMultiProgressDialog::start( QString key, int nSteps, QString caption ) {
 }
 
 
-void CMultiProgressDialog::setNSteps( int idx, int nSteps ) {
-  ui->progress->setNSteps( idx, nSteps );
+void CMultiProgressDialog::setNStepsToBeCompleted( int idx, int nSteps ) {
+  ui->progress->setNStepsToBeCompleted( idx, nSteps );
 }
 
 
-void CMultiProgressDialog::setNSteps( QString stepName, int nSteps ) {
-  ui->progress->setNSteps( stepName, nSteps );
+void CMultiProgressDialog::setNStepsToBeCompleted( QString stepName, int nSteps ) {
+  ui->progress->setNStepsToBeCompleted( stepName, nSteps );
 }
 
 

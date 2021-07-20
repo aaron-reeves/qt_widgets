@@ -95,7 +95,7 @@ void CMultiProgressWidget::setup( const QStringList& stepNames, const QStringLis
 void CMultiProgressWidget::setCaption( QString caption ) {
   _mutex.lock();
 
-  if( !  cancelClicked ) {
+  if( !cancelClicked ) {
     _mainCaption = caption;
     ui->lblCaption->setText( caption );
   }
@@ -155,13 +155,13 @@ void CMultiProgressWidget::setCaption( QString stepName, QString caption ) {
 }
 
 
-void CMultiProgressWidget::setNSteps( int idx, int nSteps ) {
+void CMultiProgressWidget::setNStepsToBeCompleted( int idx, int nSteps ) {
   _mutex.lock();
   Q_ASSERT( ( 0 <= idx ) && ( idx < _progressWidgetsList.count() ) );
   _progressWidgetsList.at(idx)->setMaximum( nSteps );
   _mutex.unlock();
 }
-void CMultiProgressWidget::setNSteps( QString stepName, int nSteps ) {
+void CMultiProgressWidget::setNStepsToBeCompleted( QString stepName, int nSteps ) {
   _mutex.lock();
   Q_ASSERT( _progressWidgetsHash.contains( stepName ) );
   _progressWidgetsHash.value(stepName)->setMaximum( nSteps );

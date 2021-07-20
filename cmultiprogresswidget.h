@@ -56,13 +56,15 @@ class CMultiProgressWidget : public QWidget {
     void setCaption( int idx, QString caption );
     void setCaption( QString stepName, QString caption );    
 
-    // Start an individual progress bar, informing it of how many total steps it will ultimately have
+    // Start an individual progress bar at 0, while simultaneously informing it of how many total steps it will ultimately have
+    // and setting the caption for the individual progress bar.
     void start( int idx, int nSteps, QString caption );
     void start( QString key, int nSteps, QString caption );
 
-    // Tell an individual progress bar how many total steps it has.
-    void setNSteps( int idx, int nSteps );
-    void setNSteps( QString stepName, int nSteps );
+    // Tell an individual progress bar how many total steps it has, but don't start it at 0.
+    // Useful in conjunction with start() (without parameters) above.
+    void setNStepsToBeCompleted( int idx, int nSteps );
+    void setNStepsToBeCompleted( QString stepName, int nSteps );
 
     // Tell an individual progress bar how far it's made it.
     void setStepComplete( int idx, int step );

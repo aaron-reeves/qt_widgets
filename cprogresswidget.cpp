@@ -190,11 +190,8 @@ void CProgressWidget::setComplete( const int result ) {
     _addlCaption = QStringLiteral( "Complete with errors" );
   }
 
-  if( 0 == ui->progressBar->value() ) {
-    ui->progressBar->setMaximum(1);
-  }
-  ui->progressBar->setValue( ui->progressBar->maximum() );
-
+  ui->progressBar->setMaximum(1);
+  ui->progressBar->setValue(1);
 
   setCaption();
 }
