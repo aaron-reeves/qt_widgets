@@ -76,6 +76,10 @@ class CMultiProgressDialog : public QDialog {
     void cancelButtonClicked();
     void okButtonClicked();
 
+  protected:
+    void closeEvent( QCloseEvent* e ) override;
+    bool _workInProgress;
+
   private:
     Ui::CMultiProgressDialog *ui;
 };

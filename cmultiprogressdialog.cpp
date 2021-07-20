@@ -13,10 +13,14 @@ Public License as published by the Free Software Foundation, version 3.
 #include "cmultiprogressdialog.h"
 #include "ui_cmultiprogressdialog.h"
 
+#include <QCloseEvent>
+#include <QDebug>
+
 CMultiProgressDialog::CMultiProgressDialog( QWidget *parent ) : QDialog (parent ), ui( new Ui::CMultiProgressDialog ) {
   ui->setupUi( this );
 
   cancelClickedPtr = &ui->progress->cancelClicked;
+  _workInProgress = false;
 
   connect( ui->progress, SIGNAL( cancelButtonClicked() ), this, SIGNAL( cancelButtonClicked() ) );
   connect( ui->progress, SIGNAL( okButtonClicked() ), this, SIGNAL( okButtonClicked() ) );
@@ -47,6 +51,7 @@ int CMultiProgressDialog::nBars() const {
 
 
 void CMultiProgressDialog::start() {
+  _workInProgress = true;
   ui->progress->start();
 }
 
@@ -67,11 +72,13 @@ void CMultiProgressDialog::setCaption( QString stepName, QString caption ) {
 
 
 void CMultiProgressDialog::start( int idx, int nSteps, QString caption ) {
+  _workInProgress = true;
   ui->progress->start( idx, nSteps, caption );
 }
 
 
 void CMultiProgressDialog::start( QString key, int nSteps, QString caption ) {
+  _workInProgress = true;
   ui->progress->start( key, nSteps, caption );
 }
 
@@ -116,6 +123,7 @@ void CMultiProgressDialog::setProgressComplete( QString stepName, int result )  
 
 
 void CMultiProgressDialog::setAllProgressComplete( int result ) {
+  _workInProgress = false;
   ui->progress->setAllProgressComplete( result );
 }
 
@@ -127,4 +135,16 @@ void CMultiProgressDialog::clearMessages() {
 
 void CMultiProgressDialog::appendMessage( QString msg ) {
   ui->progress->appendMessage( msg );
+}
+
+
+void CMultiProgressDialog::closeEvent( QCloseEvent* e ) {
+  if( _workInProgress ) {
+    qDebug() << "You can't do that yet.";
+    e->ignore();
+  }
+  else {
+    e->accept();
+    QDialog::closeEvent( e );
+  }
 }
