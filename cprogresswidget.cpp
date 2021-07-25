@@ -107,7 +107,10 @@ void CProgressWidget::start( const int nSteps, const QString& caption /* = QStri
   _addlCaption = QStringLiteral( "0 of %1" ).arg( nSteps );
 
   setCaption();
-  QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 }
 
 
@@ -115,7 +118,10 @@ void CProgressWidget::setValue( const int val ) {
   _addlCaption = QString( "%1 of %2" ).arg( val ).arg( ui->progressBar->maximum() );
   setCaption();
   ui->progressBar->setValue( val );
-  QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 }
 
 
@@ -126,7 +132,10 @@ int CProgressWidget::value() const {
 
 void CProgressWidget::setMaximum( const int val ) {
   ui->progressBar->setMaximum( val );
-  QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 }
 
 
@@ -137,7 +146,10 @@ int CProgressWidget::maximum() const {
 
 void CProgressWidget::setMinimum( const int val ) {
   ui->progressBar->setMinimum( val );
-  QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 }
 
 
@@ -160,7 +172,10 @@ void CProgressWidget::setCaption() {
   else {
     ui->label->setText( QStringLiteral( "%1: %2" ).arg( _caption, _addlCaption ) );
   }
-  QCoreApplication::processEvents();
+
+  #ifndef QCONCURRENT_USED
+    QCoreApplication::processEvents();
+  #endif
 }
 
 
