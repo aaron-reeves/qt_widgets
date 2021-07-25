@@ -21,6 +21,7 @@ CMultiProgressWidget::CMultiProgressWidget( QWidget *parent ) : QWidget(parent),
   ui->setupUi(this);
 
   cancelClicked = false;
+  _useOKButton = false;
   ui->btnCancel->setEnabled( false );
   ui->btnOK->setVisible( false );
   ui->btnCopy->setEnabled( false );
@@ -231,7 +232,7 @@ void CMultiProgressWidget::setAllProgressComplete( int result ) {
   }
 
   ui->btnCancel->setVisible( false );
-  ui->btnOK->setVisible( true );
+  ui->btnOK->setVisible( _useOKButton );
 
   _mutex.unlock();
 }

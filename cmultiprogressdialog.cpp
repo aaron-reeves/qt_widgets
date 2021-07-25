@@ -21,6 +21,8 @@ CMultiProgressDialog::CMultiProgressDialog( QWidget *parent ) : QDialog (parent 
 
   cancelClickedPtr = &ui->progress->cancelClicked;
   _workInProgress = false;
+  
+  ui->progress->setUseOKButton( true );
 
   connect( ui->progress, SIGNAL( cancelButtonClicked() ), this, SIGNAL( cancelButtonClicked() ) );
   connect( ui->progress, SIGNAL( okButtonClicked() ), this, SIGNAL( okButtonClicked() ) );

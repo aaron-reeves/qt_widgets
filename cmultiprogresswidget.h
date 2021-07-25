@@ -44,6 +44,10 @@ class CMultiProgressWidget : public QWidget {
     // shop processing, etc.
     bool cancelClicked;
 
+    // By default, the OK button on the widget is not used or visible.
+    // By contrast, it *is* used by default on CMultiprogressDialog.
+    void setUseOKButton( const bool val ) { _useOKButton = val; }
+
   public slots:
     // Call this before calling any other functions for the widget to operate correctly.
     // Sets all individual progress bars to their starting positions.
@@ -97,6 +101,8 @@ class CMultiProgressWidget : public QWidget {
     QString _mainCaption;
 
     QMutex _mutex;
+
+    bool _useOKButton;
 
   private slots:
     void setProcessingCanceled();
