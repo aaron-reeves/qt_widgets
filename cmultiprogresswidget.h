@@ -94,9 +94,6 @@ class CMultiProgressWidget : public QWidget {
     void okButtonClicked();
 
   protected:
-    //void connectSlots();
-    //void disconnectSlots();
-
     QString _operation;
     QString _mainCaption;
 
