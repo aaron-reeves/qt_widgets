@@ -69,6 +69,7 @@ class CFileSelect : public QWidget {
     // Defaults to all files.
     void setFilter( const QString& val ) { _filter = val; }
     QString specifiedFilter() const { return _filter; }
+    QString selectedFilter() const { return _selectedFilter; }
 
     // Label displayed by the widget itself
     void setLabel( const QString& val );
@@ -120,6 +121,7 @@ class CFileSelect : public QWidget {
     QString startDirectory() const; // Helper used by selectFolder and selectFile
 
     QString _filter;
+    QString _selectedFilter;
     QString _caption;
     int _mode;
 

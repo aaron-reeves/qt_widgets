@@ -67,6 +67,7 @@ CFileSelect::CFileSelect( QWidget* parent, Qt::WindowFlags f ) : QWidget( parent
 
   // Filter format: "Plain text files (*.txt);; All Files (*.*)"
   _filter = QStringLiteral( "All Files (*.*)" );
+  _selectedFilter = QStringLiteral( "All Files (*.*)" );
   _caption = QStringLiteral( "Please select a file" );
   _mode = ModeUnspecified;
 
@@ -224,18 +225,23 @@ void CFileSelect::selectFile() {
     else
       dialog.setFileMode( QFileDialog::AnyFile );
 
-    if( dialog.exec() )
+    if( dialog.exec() ) {
       selectedFile = dialog.selectedFiles().at(0);
-    else
+      _selectedFilter = dialog.selectedNameFilter();
+    }
+    else {
       selectedFile = QString();
+      _selectedFilter = QString();
+    }
   }
   else if( _mode & ModeSaveFile ) {
-    selectedFile = QFileDialog::getSaveFileName( this, _caption, startDirectory(), _filter );
+    selectedFile = QFileDialog::getSaveFileName( this, _caption, startDirectory(), _filter, &_selectedFilter );
   }
   else {
     qDb() << "There is a problem in CFileSelect::selectFile()" << _mode;
     Q_ASSERT( false );
     selectedFile = QString();
+    _selectedFilter = QString();
   }
 
   if( !selectedFile.isEmpty() ) {
