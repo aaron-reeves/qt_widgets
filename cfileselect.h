@@ -70,6 +70,7 @@ class CFileSelect : public QWidget {
     void setFilter( const QString& val ) { _filter = val; }
     QString specifiedFilter() const { return _filter; }
     QString selectedFilter() const { return _selectedFilter; }
+    void setSelectedFilter( const QString& val ) { _selectedFilter = val; }
 
     // Label displayed by the widget itself
     void setLabel( const QString& val );
