@@ -29,6 +29,7 @@ class CProgressWidget : public QWidget {
     ~CProgressWidget();
 
     static QString defaultStyle();
+    static QString warningStyle();
     static QString errorStyle();
     static QString terminatedStyle();
 

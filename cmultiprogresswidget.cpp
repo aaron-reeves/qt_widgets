@@ -223,6 +223,9 @@ void CMultiProgressWidget::setAllProgressComplete( int result ) {
   else if( ReturnCode::SUCCESS == result ) {
     ui->lblCaption->setText( QStringLiteral( "Processing successful." ) );
   }
+  else if( ReturnCode::WARNING_KNOWN_ISSUE >= result ) {
+    ui->lblCaption->setText( QStringLiteral( "Processing completed with warnings." ) );
+  }
   else {
     ui->lblCaption->setText( QStringLiteral( "Processing completed with errors." ) );
   }

@@ -50,6 +50,29 @@ QString CProgressWidget::defaultStyle() {
 }
 
 
+QString CProgressWidget::warningStyle() {
+  return QString(
+    " QProgressBar:horizontal {         "
+    " border-top: 1px solid gray;       "
+    " border-left: 1px solid gray;      "
+    " border-bottom: 1px solid white;   "
+    " border-right: 1px solid white;    "
+    " border-radius: 0px;               "
+    " background: rgb( 212, 208, 200 ); "
+    " padding: 2px;                     "
+    " text-align: right;                "
+    " margin-right: 12ex;               "
+    " height: 15px;                     "
+    " }                                 "
+    " QProgressBar::chunk:horizontal {  "
+    " background: rgb( 255, 234, 0 );   "
+    " margin-right: 2px; /* space */    "
+    " width: 8px;                       "
+    " }                                 "
+  );
+}
+
+
 QString CProgressWidget::errorStyle() {
   return QString(
     " QProgressBar:horizontal {         "
@@ -195,6 +218,10 @@ void CProgressWidget::setComplete( const int result ) {
   if( ReturnCode::SUCCESS == result ) {
     ui->progressBar->setStyleSheet( CProgressWidget::defaultStyle() );
     _addlCaption = QStringLiteral( "Complete" );
+  }
+  else if( ReturnCode::WARNING_KNOWN_ISSUE >= result ) {
+    ui->progressBar->setStyleSheet( CProgressWidget::warningStyle() );
+    _addlCaption = QStringLiteral( "Complete with warnings" );
   }
   else if( result & ReturnCode::PROCESSING_INTERRUPTED ) {
     ui->progressBar->setStyleSheet( CProgressWidget::terminatedStyle() );
