@@ -48,6 +48,8 @@ class CMultiProgressWidget : public QWidget {
     // By contrast, it *is* used by default on CMultiprogressDialog.
     void setUseOKButton( const bool val ) { _useOKButton = val; }
 
+    QString text() const;
+
   public slots:
     // Call this before calling any other functions for the widget to operate correctly.
     // Sets all individual progress bars to their starting positions.

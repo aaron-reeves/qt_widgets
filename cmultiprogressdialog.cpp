@@ -140,6 +140,11 @@ void CMultiProgressDialog::appendMessage( QString msg ) {
 }
 
 
+QString CMultiProgressDialog::text() const {
+  return ui->progress->text();
+}
+
+
 void CMultiProgressDialog::closeEvent( QCloseEvent* e ) {
   if( _workInProgress ) {
     qDebug() << "You can't do that yet.";

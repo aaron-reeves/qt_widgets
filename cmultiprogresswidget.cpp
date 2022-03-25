@@ -262,3 +262,8 @@ void CMultiProgressWidget::copyMessages() {
 }
 
 
+QString CMultiProgressWidget::text() const {
+  return ui->pteMessages->toPlainText();
+}
+
+

@@ -72,6 +72,8 @@ class CMultiProgressDialog : public QDialog {
     void clearMessages();
     void appendMessage( QString msg );
 
+    QString text() const;
+
   signals:
     void cancelButtonClicked();
     void okButtonClicked();
